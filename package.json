@@ -28,31 +28,58 @@
           "name": "Task Manager"
         }
       ]
+    },
+    "commands": [
+      {
+        "command": "taskManager.createTask",
+        "title": "Create Task"
+      },
+      {
+        "command": "taskManager.toggleTaskCompletion",
+        "title": "Toggle Task Completion"
+      },
+      {
+        "command": "taskManager.addFileToTask",
+        "title": "Add File to Task"
+      },
+      {
+        "command": "taskManager.openTaskFile",
+        "title": "Open Task File"
+      },
+      {
+        "command": "taskManager.openAllFilesInTask",
+        "title": "Open All Files in Task"
+      },
+      {
+        "command": "taskManager.closeAllFilesInTask",
+        "title": "Close All Files in Task"
+      }
+    ],
+    "menus": {
+      "view/item/context": [
+        {
+          "command": "taskManager.openAllFilesInTask",
+          "when": "view == taskManagerView && viewItem == task",
+          "group": "1_taskActions"
+        },        
+        {
+          "command": "taskManager.closeAllFilesInTask",
+          "when": "view == taskManagerView && viewItem == task",
+          "group": "1_taskActions"
+        },
+        {
+          "command": "taskManager.addFileToTask",
+          "when": "view == taskManagerView && viewItem == task",
+          "group": "2_taskActions"
+        },
+        {
+          "command": "taskManager.createTask",
+          "when": "view == taskManagerView && viewItem == task",
+          "group": "2_taskActions"
+        }
+      ]
     }
   },
-  "commands": [
-    {
-      "command": "taskManager.createTask",
-      "title": "Create Task"
-    },
-    {
-      "command": "taskManager.toggleTaskCompletion",
-      "title": "Toggle Task Completion"
-    },
-    {
-      "command": "taskManager.addFileToTask",
-      "title": "Add File to Task"
-    },
-    {
-      "command": "taskManager.openTaskFile",
-      "title": "Open Task File"
-    },
-    {
-      "command": "taskManager.closeAllFilesInTask",
-      "title": "Close All Files in Task"
-    }
-  ],
-  
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
