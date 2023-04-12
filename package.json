@@ -1,0 +1,124 @@
+{
+  "name": "file-organizer",
+  "displayName": "file_organizer",
+  "description": "",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.76.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "taskManager",
+          "title": "Task Manager",
+          "icon": "resources/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "taskManager": [
+        {
+          "id": "taskManagerView",
+          "name": "Task Manager"
+        }
+      ],
+      "explorer": [
+        {
+          "id": "taskManagerExplorer",
+          "name": "Task Manager"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "taskManager.createTask",
+        "title": "Create Task"
+      },
+      {
+        "command": "taskManager.toggleTaskCompletion",
+        "title": "Toggle Task Completion"
+      },
+      {
+        "command": "taskManager.addFileToTask",
+        "title": "Add File to Task"
+      },
+      {
+        "command": "taskManager.openTaskFile",
+        "title": "Open Task File"
+      },
+      {
+        "command": "taskManager.openAllFilesInTask",
+        "title": "Open All Files in Task"
+      },
+      {
+        "command": "taskManager.closeAllFilesInTask",
+        "title": "Close All Files in Task"
+      },
+      {
+        "command": "taskManager.test",
+        "title": "test"
+      },
+      {
+        "command": "tabscolor.debugColors",
+        "title": "debug"
+      },
+      {
+        "command": "tabscolor.resetTabs",
+        "title": "reset"
+      }
+      
+      
+    ],
+    "menus": {
+      "view/item/context": [
+        {
+          "command": "taskManager.openAllFilesInTask",
+          "when": "view == taskManagerView && viewItem == task",
+          "group": "1_taskActions"
+        },        
+        {
+          "command": "taskManager.closeAllFilesInTask",
+          "when": "view == taskManagerView && viewItem == task",
+          "group": "1_taskActions"
+        },
+        {
+          "command": "taskManager.addFileToTask",
+          "when": "view == taskManagerView && viewItem == task",
+          "group": "2_taskActions"
+        },
+        {
+          "command": "taskManager.createTask",
+          "when": "view == taskManagerView && viewItem == task",
+          "group": "2_taskActions"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.76.0",
+    "@types/glob": "^8.1.0",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "16.x",
+    "@typescript-eslint/eslint-plugin": "^5.56.0",
+    "@typescript-eslint/parser": "^5.56.0",
+    "eslint": "^8.36.0",
+    "glob": "^8.1.0",
+    "mocha": "^10.2.0",
+    "typescript": "^4.9.5",
+    "@vscode/test-electron": "^2.3.0"
+  }
+}
