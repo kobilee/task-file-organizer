@@ -30,58 +30,119 @@
       ],
       "explorer": [
         {
-          "id": "taskManagerExplorer",
-          "name": "Task Manager"
+          "id": "activeTasks",
+          "name": "Active Tasks"
+        },
+        {
+          "id": "completedTasks",
+          "name": "Completed Tasks"
         }
       ]
     },
     "commands": [
       {
         "command": "taskManager.createTask",
-        "title": "Create Task"
+        "title": "Create Task",
+        "category": "Task Manager"
       },
       {
         "command": "taskManager.toggleTaskCompletion",
-        "title": "Toggle Task Completion"
+        "title": "Toggle Task Completion",
+        "category": "Task Manager"
       },
       {
         "command": "taskManager.addFileToTask",
-        "title": "Add File to Task"
+        "title": "Add File to Task",
+        "category": "Task Manager"
       },
       {
         "command": "taskManager.openTaskFile",
-        "title": "Open Task File"
+        "title": "Open Task File",
+        "category": "Task Manager"
       },
       {
         "command": "taskManager.openAllFilesInTask",
-        "title": "Open All Files in Task"
+        "title": "Open All Files in Task",
+        "category": "Task Manager"
       },
       {
         "command": "taskManager.closeAllFilesInTask",
-        "title": "Close All Files in Task"
+        "title": "Close All Files in Task",
+        "category": "Task Manager"
       },
       {
-        "command": "taskManager.test",
-        "title": "test"
+        "command": "taskManager.sortAllOpenedEditors",
+        "title": "Sort All Files in Task",
+        "category": "Task Manager"
       },
       {
         "command": "tabscolor.debugColors",
-        "title": "debug"
+        "title": "Debug",
+        "category": "Task Manager"
       },
       {
         "command": "tabscolor.resetTabs",
-        "title": "reset"
+        "title": "Reset",
+        "category": "Task Manager"
+      },
+      {
+        "command": "taskManager.removeFileFromTask",
+        "title": "Remove File from Task",
+        "category": "Task Manager"
+      },
+      {
+        "command": "taskManager.removeTask",
+        "title": "Remove Task",
+        "category": "Task Manager"
+      },
+      {
+        "command": "taskManager.activateTask",
+        "title": "Activate Task",
+        "category": "Task Manager"
+      },
+      {
+        "command": "taskManager.completeTask",
+        "title": "Complete Task",
+        "category": "Task Manager"
+      },
+      {
+        "command": "taskManager.uncompleteTask",
+        "title": "Uncomplete Task",
+        "category": "Task Manager"
       }
-      
-      
     ],
     "menus": {
       "view/item/context": [
         {
+          "command": "taskManager.uncompleteTask",
+          "when": "view == completedTasks && viewItem == task",
+          "group": "5_taskActions"
+        },
+        {
+          "command": "taskManager.removeFileFromTask",
+          "when": "view == taskManagerView && viewItem == file",
+          "group": "4_taskActions"
+        },
+        {
           "command": "taskManager.openAllFilesInTask",
           "when": "view == taskManagerView && viewItem == task",
           "group": "1_taskActions"
-        },        
+        },
+        {
+          "command": "taskManager.completeTask",
+          "when": "view == taskManagerView && viewItem == task",
+          "group": "3_taskActions"
+        },
+        {
+          "command": "taskManager.activateTask",
+          "when": "view == taskManagerView && viewItem == task",
+          "group": "3_taskActions"
+        },
+        {
+          "command": "taskManager.sortAllOpenedEditors",
+          "when": "view == taskManagerView && viewItem == task",
+          "group": "1_taskActions"
+        },
         {
           "command": "taskManager.closeAllFilesInTask",
           "when": "view == taskManagerView && viewItem == task",
@@ -94,6 +155,11 @@
         },
         {
           "command": "taskManager.createTask",
+          "when": "view == taskManagerView && viewItem == task",
+          "group": "2_taskActions"
+        },
+        {
+          "command": "taskManager.removeTask",
           "when": "view == taskManagerView && viewItem == task",
           "group": "2_taskActions"
         }
