@@ -1,6 +1,8 @@
-import * as fs from "fs";
-import * as os from "os";
-import * as vscode from "vscode";
+import * as fs from 'fs';
+import * as os from 'os';
+import * as sudo from 'sudo-prompt';
+
+import * as vscode from 'vscode';
 
 type SudoPromptCallback = (result: boolean) => void;
 
@@ -106,7 +108,7 @@ class Core {
     sudo.exec(
       command,
       options,
-      (error: Error, stdout: string, stderr: string) => {
+      (error?: Error, stdout?: string | Buffer, stderr?: string | Buffer) => {
         if (error) {
           func(false);
           throw error;
