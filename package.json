@@ -27,6 +27,12 @@
           "id": "taskManagerView",
           "name": "Task Manager"
         }
+      ],
+      "explorer": [
+        {
+          "id": "taskManagerExplorer",
+          "name": "Task Manager"
+        }
       ]
     },
     "commands": [
@@ -53,7 +59,21 @@
       {
         "command": "taskManager.closeAllFilesInTask",
         "title": "Close All Files in Task"
+      },
+      {
+        "command": "taskManager.test",
+        "title": "test"
+      },
+      {
+        "command": "tabscolor.debugColors",
+        "title": "debug"
+      },
+      {
+        "command": "tabscolor.resetTabs",
+        "title": "reset"
       }
+      
+      
     ],
     "menus": {
       "view/item/context": [

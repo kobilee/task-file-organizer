@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { generateUniqueId } from './extension';
-
+import { setColor } from './color_tab';
 
 export interface Task {
     id: string;
@@ -15,10 +15,6 @@ export interface TaskFile {
     filePath: string;
 }
 
-function generateRandomColor(): string {
-  return '#' + Math.floor(Math.random() * 16777215).toString(16);
-}
-
 export function generateColoredCircleSvg(color: string): string {
   return `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color}">
@@ -31,6 +27,7 @@ export class TaskTreeItem extends vscode.TreeItem {
   public taskJSON: string;
 
     constructor(
+      public readonly context: vscode.ExtensionContext,
       public readonly task: Task,
       public readonly taskFile: TaskFile | null,
       public readonly type: "task" | "file",
@@ -39,12 +36,12 @@ export class TaskTreeItem extends vscode.TreeItem {
       this.id = type === "task" ? task.id : task.id + taskFile!.filePath;
       this.collapsibleState = type === "task" ? vscode.TreeItemCollapsibleState.Collapsed : void 0;
       this.contextValue = type;
+      this.context = context;
       this.taskJSON = type === "task" ? JSON.stringify(task) : "";
 
-
+      
 
       if (type === "task") {
-        task.color = generateRandomColor();
         const svgString = generateColoredCircleSvg(task.color);
         this.iconPath = vscode.Uri.parse(`data:image/svg+xml;base64,${Buffer.from(svgString).toString('base64')}`);
         this.command = {
@@ -52,7 +49,8 @@ export class TaskTreeItem extends vscode.TreeItem {
           title: "Open All Files in Task",
           arguments: [task],
         };
-      } else if (type === "file") {
+      } else if (type === "file" && taskFile) {
+        setColor(context, task.color, taskFile.filePath)
         this.command = {
           command: "taskManager.openTaskFile",
           title: "Open Task File",
@@ -64,7 +62,11 @@ export class TaskTreeItem extends vscode.TreeItem {
 
 
 export class TaskManagerProvider implements vscode.TreeDataProvider<TaskTreeItem> {
-    
+    constructor(
+      public readonly context: vscode.ExtensionContext,
+    ) {
+      this.context = context;
+    }
     private _onDidChangeTreeData: vscode.EventEmitter<TaskTreeItem | undefined> = new vscode.EventEmitter<TaskTreeItem | undefined>();
     readonly onDidChangeTreeData: vscode.Event<TaskTreeItem | undefined> = this._onDidChangeTreeData.event;
 
@@ -95,7 +97,7 @@ export class TaskManagerProvider implements vscode.TreeDataProvider<TaskTreeItem
                 filePath: 'C:/Users/Jakobi Lee/Documents/test/file3.txt',
                 },
             ],
-            color: "#000000"
+            color: "#528752"
         },
     ];
     public getTaskByFilePath(filePath: string): Task | undefined {
@@ -126,13 +128,13 @@ export class TaskManagerProvider implements vscode.TreeDataProvider<TaskTreeItem
             const task = this.tasks.find((t) => t.id === element.task.id) || null;
             if (task) {
               return Promise.resolve(
-                task.files.map((file) => new TaskTreeItem(task, file, "file"))
+                task.files.map((file) => new TaskTreeItem(this.context, task, file, "file"))
               );
             }
           }
         } else {
           return Promise.resolve(
-            this.tasks.map((task) => new TaskTreeItem(task, null, "task"))
+            this.tasks.map((task) => new TaskTreeItem(this.context, task, null, "task"))
           );
         }
         return Promise.resolve([]);
