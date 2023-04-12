@@ -1,61 +1,120 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import * as vscode from 'vscode';
-import { TaskManagerProvider, Task, TaskTreeItem, generateColoredCircleSvg} from './taskManager';
-import Storage from './storage';
-import Core from './core';
-import * as path from 'path';
-import * as os from 'os';
-import * as fs from 'fs';
-import { generateCssFile, reloadCss, setColor } from './color_tab';
+import * as vscode from "vscode";
+import {
+  TaskManagerProvider,
+  Task,
+  TaskFile,
+  TaskTreeItem,
+  ActiveTaskProvider,
+  CompletedTaskProvider,
+} from "./taskManager";
+import Storage from "./storage";
+import Core from "./core";
+import * as path from "path";
+import * as os from "os";
+import * as fs from "fs";
+import { generateCssFile, reloadCss, setColor, unsetColor } from "./color_tab";
 
+const collator = new Intl.Collator(undefined, {
+  numeric: true,
+  sensitivity: "base",
+  ignorePunctuation: true,
+});
 
-
+const progressOptions: vscode.ProgressOptions = {
+  location: vscode.ProgressLocation.Notification,
+  title: "Sorting editors",
+  cancellable: true,
+};
 
 function modulesPath(context: vscode.ExtensionContext): vscode.Uri {
-  return vscode.Uri.joinPath(context.globalStorageUri, 'modules');
+  return vscode.Uri.joinPath(context.globalStorageUri, "modules");
 }
 
 export function generateUniqueId() {
-  return new Date().getTime().toString(36) + Math.random().toString(36).substr(2, 5);
-} 
+  return (
+    new Date().getTime().toString(36) + Math.random().toString(36).substr(2, 5)
+  );
+}
 
 function generateRandomColor(): string {
-	return '#' + Math.floor(Math.random() * 16777215).toString(16);
-  }
+  return "#" + Math.floor(Math.random() * 16777215).toString(16);
+}
 
 async function createTask(taskManagerProvider: TaskManagerProvider) {
-  const taskName = await vscode.window.showInputBox({ prompt: 'Enter the task name' });
+  const taskName = await vscode.window.showInputBox({
+    prompt: "Enter the task name",
+  });
   if (taskName) {
     const newTask: Task = {
       id: generateUniqueId(),
       name: taskName,
       isComplete: false,
       files: [],
-      color: generateRandomColor()
+      color: generateRandomColor(),
     };
     taskManagerProvider.addTask(newTask);
   }
 }
 
-async function toggleTaskCompletion(taskManagerProvider: TaskManagerProvider, task: Task) {
+function unsetColorLoop(task: Task, context: vscode.ExtensionContext) {
+  for (let i = 0; i < task.files.length; i++) {
+    const file = task.files[i];
+    unsetColor(context, file.filePath.replace(/\\/g, "\\\\"));
+  }
+}
+
+async function removeTask(
+  taskManagerProvider: TaskManagerProvider,
+  task: Task,
+  context: vscode.ExtensionContext
+) {
+  unsetColorLoop(task, context);
+  taskManagerProvider.removeTask(task);
+}
+
+async function toggleTaskCompletion(
+  taskManagerProvider: TaskManagerProvider,
+  task: Task
+) {
   task.isComplete = !task.isComplete;
   taskManagerProvider.refresh();
 }
 
-async function addFileToTask(taskManagerProvider: TaskManagerProvider, task: Task, context: vscode.ExtensionContext) {
+async function addFileToTask(
+  taskManagerProvider: TaskManagerProvider,
+  task: Task,
+  context: vscode.ExtensionContext
+) {
   const options: vscode.OpenDialogOptions = {
     canSelectMany: false,
-    openLabel: 'Select a file',
+    openLabel: "Select a file",
     filters: {
-      'All files': ['*'],
+      "All files": ["*"],
     },
   };
 
   const fileUri = await vscode.window.showOpenDialog(options);
   if (fileUri && fileUri[0]) {
     taskManagerProvider.addFileToTask(task, fileUri[0].fsPath);
-	setColor(context,task.color, fileUri[0].fsPath);
+    setColor(context, task.id, task.color, fileUri[0].fsPath);
+  }
+}
+
+async function removeFileFromTask(
+  taskManagerProvider: TaskManagerProvider,
+  taskTreeItem: TaskTreeItem,
+  context: vscode.ExtensionContext
+) {
+  const file = JSON.parse(taskTreeItem.fileJSON) as TaskFile;
+  if (typeof taskTreeItem.id === "string") {
+    const taskId = taskTreeItem.id.split("|")[0];
+    taskManagerProvider.removeFileFromTask(taskId, file);
+    unsetColor(context, taskTreeItem.id.split("|")[1].replace(/\\/g, "\\\\"));
+  } else {
+    // Handle the case where taskTreeItem.id is undefined, if necessary
+    console.error("taskTreeItem.id is undefined");
   }
 }
 
@@ -63,6 +122,13 @@ async function openTaskFile(filePath: string) {
   const fileUri = vscode.Uri.file(filePath);
   const document = await vscode.workspace.openTextDocument(fileUri);
   await vscode.window.showTextDocument(document, { preview: false });
+}
+
+async function activateTask(task: Task, context: vscode.ExtensionContext) {
+  for (let i = 0; i < task.files.length; i++) {
+    const file = task.files[i];
+    setColor(context, task.id, task.color, file.filePath);
+  }
 }
 
 async function openAllFilesInTask(task: Task) {
@@ -75,39 +141,128 @@ async function closeAllFilesInTask(task: Task) {
   const filesToClose = task.files.map((file) => vscode.Uri.file(file.filePath));
 
   for (const file of filesToClose) {
-    const document = vscode.workspace.textDocuments.find((doc) => doc.uri.fsPath === file.fsPath);
+    const document = vscode.workspace.textDocuments.find(
+      (doc) => doc.uri.fsPath === file.fsPath
+    );
 
     if (document) {
       console.log(`Closing file: ${file.fsPath}`);
-      await vscode.window.showTextDocument(document, { preview: false, preserveFocus: true });
-      await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
+      await vscode.window.showTextDocument(document, {
+        preview: false,
+        preserveFocus: true,
+      });
+      await vscode.commands.executeCommand(
+        "workbench.action.closeActiveEditor"
+      );
     }
   }
 }
 
+function isTabInTask(tab: vscode.Tab, task: Task): boolean {
+  const tabFilePath = (tab.input as vscode.TabInputText).uri.path.replace(
+    /\//g,
+    "\\"
+  );
+  for (const taskFile of task.files) {
+    const file = "\\" + taskFile.filePath;
+    if (file === tabFilePath) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function sortTabGroupEditors(
+  tabGroups: readonly vscode.TabGroup[],
+  task: Task
+) {
+  const formatPath = (a: string) => path.basename(a);
+  return tabGroups.flatMap((g) => {
+    return g.tabs
+      .filter(
+        (t) => t.input instanceof vscode.TabInputText && isTabInTask(t, task)
+      ) // Filter tabs that are part of a task
+      .map((t) => ({ ...t, uri: (t.input as vscode.TabInputText).uri }))
+      .sort((a, b) =>
+        b.isPinned
+          ? 1
+          : collator.compare(formatPath(a.uri.path), formatPath(b.uri.path))
+      );
+  });
+}
+
+async function sortAllOpenedEditors(tabGroups: readonly vscode.TabGroup[], task: Task) {
+	const sortedEditors = sortTabGroupEditors(tabGroups, task);
+    const lastActiveEditor = vscode.window.activeTextEditor;
+    const increment = 100 / sortedEditors.length;
+    await vscode.window.withProgress(progressOptions, async (progress, cancellationToken) => {
+        for (let i = 0; i < sortedEditors.length; i++) {
+            if (cancellationToken.isCancellationRequested) {
+                break;
+            }
+
+            progress.report({ message: `${i + 1}/${sortedEditors.length}` });
+
+            if (sortedEditors[i].isPinned === false) {
+                try {
+                    await vscode.window.showTextDocument(sortedEditors[i].uri, { preview: false, viewColumn: sortedEditors[i].group.viewColumn });
+                    await vscode.commands.executeCommand('moveActiveEditor', { to: 'position', value: i + 1 });
+                } catch (error: any) {
+                    vscode.window.showErrorMessage(error.message ?? 'Unknown Exception');
+                }
+            }
+
+            progress.report({ increment });
+        }
+    });
+
+    if (lastActiveEditor) {
+        try {
+            await vscode.window.showTextDocument(lastActiveEditor.document, { viewColumn: lastActiveEditor.viewColumn });
+        } catch (error: any) {
+            vscode.window.showErrorMessage(error.message ?? 'Unknown Exception');
+        }
+    }
+}
+async function completeTask(
+  taskManagerProvider: TaskManagerProvider,
+  task: Task,
+  context: vscode.ExtensionContext
+) {
+  unsetColorLoop(task, context);
+  taskManagerProvider.updateTaskToComplete(task.id);
+}
+
 function promptRestart() {
-	vscode.window
-	  .showInformationMessage(
-		`Restart VS Code (not just reload) in order for tabscolor changes to take effect.`
-	  );
-  }
-  
-  function promptRestartAfterUpdate() {
-	vscode.window
-	  .showInformationMessage(
-		`VS Code files change detected. Restart VS Code (not just reload) in order for tabscolor to work.`
-	  );
-  }
+  vscode.window.showInformationMessage(
+    `Restart VS Code (not just reload) in order for tabscolor changes to take effect.`
+  );
+}
+
+function promptRestartAfterUpdate() {
+  vscode.window.showInformationMessage(
+    `VS Code files change detected. Restart VS Code (not just reload) in order for tabscolor to work.`
+  );
+}
 
 export function activate(context: vscode.ExtensionContext) {
   const storage = new Storage(context);
+  let cssFileLink = path
+    .join(modulesPath(context).path, "inject.css")
+    .replace(/\\/g, "/");
+  if (os.platform() == "win32") {
+    cssFileLink = "vscode-file://vscode-app" + cssFileLink;
+  }
 
-  let cssFileLink = path.join(modulesPath(context).path, "inject.css").replace(/\\/g, "/");
-  if (os.platform() == "win32") { cssFileLink = "vscode-file://vscode-app" + cssFileLink; }
-	
-  let bootstrapPath = path.join(path.dirname((require.main as NodeJS.Module).filename), 'vs/workbench/workbench.desktop.main.js');
+  let bootstrapPath = path.join(
+    path.dirname((require.main as NodeJS.Module).filename),
+    "vs/workbench/workbench.desktop.main.js"
+  );
   if (!fs.existsSync(bootstrapPath)) {
-    bootstrapPath = path.join(path.dirname((require.main as NodeJS.Module).filename), 'bootstrap-window.js');
+    bootstrapPath = path.join(
+      path.dirname((require.main as NodeJS.Module).filename),
+      "bootstrap-window.js"
+    );
   }
   const bootstrap = new Core(context, bootstrapPath);
   const code = `
@@ -178,90 +333,149 @@ export function activate(context: vscode.ExtensionContext) {
 	}
 	});
 	`;
-	if (!bootstrap.hasPatch("watcher")) {
-		vscode.window.showInformationMessage(`After restart you may get the message "Your Code installation is corrupt..." click on the gear icon and choose "don't show again" `);
-		if (bootstrap.isReadOnly() && !bootstrap.chmod()) {
-			bootstrap.sudoPrompt(function (result) {
-				if (result) {
-					bootstrap.add("watcher", code).write();
-					if (storage.get("patchedBefore")) {
-						storage.set("firstActivation", false);
-						storage.set("secondActivation", false);
-						promptRestartAfterUpdate();
-					} else {
-						storage.set("patchedBefore", true);
-						promptRestart();
-					}
-				} else {
-					vscode.window.showErrorMessage("Tabscolor was unable to write to " + bootstrap.file);
-				}
-			});
-		} else {
-			bootstrap.add("watcher", code).write();
-			if (storage.get("patchedBefore")) {
-				storage.set("firstActivation", false);
-				storage.set("secondActivation", false);
-				promptRestartAfterUpdate();
-			}
-			else {
-				storage.set("patchedBefore", true);
-				promptRestart();
-			}
-		}
-	} else {
-		storage.set("patchedBefore", true);
-		storage.set("firstActivation", true);
-	}
-
-	if (storage.get("firstActivation")) {
-		generateCssFile(context, "Here3");
-		reloadCss();
-		storage.set("secondActivation", true);
-	  }
-
-	vscode.workspace.onDidChangeConfiguration(e => {
-		if (e.affectsConfiguration('tabsColor')) {
-		  vscode.window.showInformationMessage('tabs colors updated');
-		  generateCssFile(context, "Here4");
-		  reloadCss();
-		}
-	});
-	
-	storage.set("firstActivation", true);
-
-
-  	const taskManagerProvider = new TaskManagerProvider(context);
-	context.subscriptions.push(
-    vscode.window.registerTreeDataProvider('taskManagerView', taskManagerProvider),
-	vscode.window.registerTreeDataProvider('taskManagerExplorer', taskManagerProvider),
-	  vscode.commands.registerCommand('taskManager.createTask', () => createTask(taskManagerProvider)),
-	  vscode.commands.registerCommand('taskManager.toggleTaskCompletion', (task: Task) => toggleTaskCompletion(taskManagerProvider, task)),
-	  vscode.commands.registerCommand('taskManager.addFileToTask', (task: Task) => addFileToTask(taskManagerProvider, task, context)),
-	  vscode.commands.registerCommand('taskManager.openTaskFile', (filePath: string) => openTaskFile(filePath)),
-	  vscode.commands.registerCommand('taskManager.openAllFilesInTask', async (taskTreeItem: TaskTreeItem) => {
-      const task = JSON.parse(taskTreeItem.taskJSON) as Task;
-      await openAllFilesInTask(task);
-    }),
-    vscode.commands.registerCommand('taskManager.closeAllFilesInTask', async (taskTreeItem: TaskTreeItem) => {
-      const task = JSON.parse(taskTreeItem.taskJSON) as Task;
-      await closeAllFilesInTask(task);
-    }),
-	vscode.commands.registerCommand('taskManager.test', function (a, b) {
-		
-		setColor(context,"transparent", 'C:\\Users\\Jakobi Lee\\Documents\\test\\file1.txt');
-		setColor(context,"transparent", 'C:\\Users\\Jakobi Lee\\Documents\\test\\file2.txt');
-	}),
-	vscode.commands.registerCommand('tabscolor.debugColors', function () {
-		// Display the stored tabs colors in console
-		console.log(storage.get("tabs"));
-	}),
-	vscode.commands.registerCommand('tabscolor.resetTabs', function () {
-		// Display the stored tabs colors in console
-		console.log(storage.clearTabColor());
-	})
-	)
+  if (!bootstrap.hasPatch("watcher")) {
+    vscode.window.showInformationMessage(
+      `After restart you may get the message "Your Code installation is corrupt..." click on the gear icon and choose "don't show again" `
+    );
+    if (bootstrap.isReadOnly() && !bootstrap.chmod()) {
+      bootstrap.sudoPrompt(function (result) {
+        if (result) {
+          bootstrap.add("watcher", code).write();
+          if (storage.get("patchedBefore")) {
+            storage.set("firstActivation", false);
+            storage.set("secondActivation", false);
+            promptRestartAfterUpdate();
+          } else {
+            storage.set("patchedBefore", true);
+            promptRestart();
+          }
+        } else {
+          vscode.window.showErrorMessage(
+            "Tabscolor was unable to write to " + bootstrap.file
+          );
+        }
+      });
+    } else {
+      bootstrap.add("watcher", code).write();
+      if (storage.get("patchedBefore")) {
+        storage.set("firstActivation", false);
+        storage.set("secondActivation", false);
+        promptRestartAfterUpdate();
+      } else {
+        storage.set("patchedBefore", true);
+        promptRestart();
+      }
+    }
+  } else {
+    storage.set("patchedBefore", true);
+    storage.set("firstActivation", true);
   }
-  
 
+  if (storage.get("firstActivation")) {
+    generateCssFile(context);
+    reloadCss();
+    storage.set("secondActivation", true);
+  }
 
+  vscode.workspace.onDidChangeConfiguration((e) => {
+    if (e.affectsConfiguration("tabsColor")) {
+      vscode.window.showInformationMessage("tabs colors updated");
+      generateCssFile(context);
+      reloadCss();
+    }
+  });
 
+  storage.set("firstActivation", true);
+
+  const taskManagerProvider = new TaskManagerProvider(context, storage);
+  const activeTaskProvider = new ActiveTaskProvider(context, storage);
+  const completedTaskProvider = new CompletedTaskProvider(context, storage);
+  context.subscriptions.push(
+    vscode.window.registerTreeDataProvider(
+      "taskManagerView",
+      taskManagerProvider
+    ),
+    vscode.window.registerTreeDataProvider("activeTasks", activeTaskProvider),
+    vscode.window.registerTreeDataProvider(
+      "completedTasks",
+      completedTaskProvider
+    ),
+    vscode.commands.registerCommand("taskManager.createTask", () =>
+      createTask(taskManagerProvider)
+    ),
+    vscode.commands.registerCommand(
+      "taskManager.removeTask",
+      (taskTreeItem: TaskTreeItem) =>
+        removeTask(taskManagerProvider, taskTreeItem.task, context)
+    ),
+    vscode.commands.registerCommand(
+      "taskManager.toggleTaskCompletion",
+      (task: Task) => toggleTaskCompletion(taskManagerProvider, task)
+    ),
+    vscode.commands.registerCommand(
+      "taskManager.addFileToTask",
+      (taskTreeItem: TaskTreeItem) =>
+        addFileToTask(taskManagerProvider, taskTreeItem.task, context)
+    ),
+    vscode.commands.registerCommand(
+      "taskManager.removeFileFromTask",
+      (taskTreeItem: TaskTreeItem) =>
+        removeFileFromTask(taskManagerProvider, taskTreeItem, context)
+    ),
+    vscode.commands.registerCommand(
+      "taskManager.completeTask",
+      (taskTreeItem: TaskTreeItem) =>
+        completeTask(taskManagerProvider, taskTreeItem.task, context)
+    ),
+    vscode.commands.registerCommand(
+      "taskManager.uncompleteTask",
+      async (taskTreeItem: TaskTreeItem) => {
+        activateTask(taskTreeItem.task, context);
+        completedTaskProvider.uncompleteTask(taskTreeItem.task);
+      }
+    ),
+    vscode.commands.registerCommand(
+      "taskManager.activateTask",
+      async (taskTreeItem: TaskTreeItem) => {
+        activateTask(taskTreeItem.task, context);
+        await sortAllOpenedEditors(
+          vscode.window.tabGroups.all,
+          taskTreeItem.task
+        );
+      }
+    ),
+    vscode.commands.registerCommand(
+      "taskManager.openTaskFile",
+      (filePath: string) => openTaskFile(filePath)
+    ),
+    vscode.commands.registerCommand(
+      "taskManager.sortAllOpenedEditors",
+      async (taskTreeItem: TaskTreeItem) => {
+        const task = JSON.parse(taskTreeItem.taskJSON) as Task;
+        await sortAllOpenedEditors(vscode.window.tabGroups.all, task);
+      }
+    ),
+    vscode.commands.registerCommand(
+      "taskManager.openAllFilesInTask",
+      async (taskTreeItem: TaskTreeItem) => {
+        const task = JSON.parse(taskTreeItem.taskJSON) as Task;
+        await openAllFilesInTask(task);
+      }
+    ),
+    vscode.commands.registerCommand(
+      "taskManager.closeAllFilesInTask",
+      async (taskTreeItem: TaskTreeItem) => {
+        const task = JSON.parse(taskTreeItem.taskJSON) as Task;
+        await closeAllFilesInTask(task);
+      }
+    ),
+
+    vscode.commands.registerCommand("tabscolor.debugColors", function () {
+      // Display the stored tabs colors in console
+      console.log(storage.get("tabs"));
+    }),
+    vscode.commands.registerCommand("tabscolor.resetTabs", function () {
+      console.log(storage.clearTabColor());
+    })
+  );
+}

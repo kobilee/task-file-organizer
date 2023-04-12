@@ -1,6 +1,6 @@
-import * as fs from 'fs';
-import * as os from 'os';
-import * as vscode from 'vscode';
+import * as fs from "fs";
+import * as os from "os";
+import * as vscode from "vscode";
 
 type SudoPromptCallback = (result: boolean) => void;
 
@@ -12,7 +12,7 @@ class Core {
 
   constructor(context: vscode.ExtensionContext, filePath: string) {
     this.context = context;
-    this.fileContent = fs.readFileSync(filePath, 'utf8');
+    this.fileContent = fs.readFileSync(filePath, "utf8");
     this.initialContent = this.fileContent;
     this.file = filePath;
   }
@@ -25,7 +25,7 @@ class Core {
     let patchString = `
         /* startpatch ${patchName} */
         `;
-    if (isReg) patchString = patchString.replace(/\*/g, '\\*');
+    if (isReg) patchString = patchString.replace(/\*/g, "\\*");
     return patchString;
   }
 
@@ -42,7 +42,7 @@ class Core {
     try {
       fs.chmodSync(this.file, 0o700);
     } catch (e) {
-      console.log('Error Code:', e);
+      console.log("Error Code:", e);
       return false;
     }
     return true;
@@ -56,26 +56,31 @@ class Core {
     let patchString = `
         /* endpatch ${patchName} */
         `;
-    if (isReg) patchString = patchString.replace(/\*/g, '\\*');
+    if (isReg) patchString = patchString.replace(/\*/g, "\\*");
     return patchString;
   }
 
   remove(patchName: string): this {
-    const regString = `(${this.startPatch(patchName, true)})[^]*(${this.endPatch(patchName, true)})`;
+    const regString = `(${this.startPatch(
+      patchName,
+      true
+    )})[^]*(${this.endPatch(patchName, true)})`;
     const reg = new RegExp(regString);
-    this.fileContent = this.fileContent.replace(reg, '');
+    this.fileContent = this.fileContent.replace(reg, "");
     return this;
   }
 
   add(patchName: string, code: string): this {
-    const enclosedCode = `${this.startPatch(patchName)} ${code} ${this.endPatch(patchName)}`;
-    this.fileContent = ' ' + enclosedCode + ' ' + this.fileContent;
+    const enclosedCode = `${this.startPatch(patchName)} ${code} ${this.endPatch(
+      patchName
+    )}`;
+    this.fileContent = " " + enclosedCode + " " + this.fileContent;
     return this;
   }
 
   empty(): void {
-    fs.writeFileSync(this.file, '');
-    this.initialContent = '';
+    fs.writeFileSync(this.file, "");
+    this.initialContent = "";
   }
 
   write(): void {
@@ -86,15 +91,16 @@ class Core {
 
   sudoPrompt(func: SudoPromptCallback): void {
     const options = {
-      name: 'TabsColor',
+      name: "TabsColor",
     };
-    const separator = this.file.includes('/') ? '/' : '\\';
+    const separator = this.file.includes("/") ? "/" : "\\";
     const baseName = this.file.split(separator).reverse()[0];
     let command = `chmod 777 "${this.file}"`;
     switch (os.platform()) {
-      case 'win32': {
-        command = `rename "${this.file}" "${baseName}"`;
-      }
+      case "win32":
+        {
+          command = `rename "${this.file}" "${baseName}"`;
+        }
         break;
     }
     sudo.exec(
@@ -107,7 +113,7 @@ class Core {
         } else {
           func(true);
         }
-      },
+      }
     );
   }
 }

@@ -1,4 +1,4 @@
-import * as vscode from 'vscode';
+import * as vscode from "vscode";
 
 interface ColorInfo {
   background: string;
@@ -29,11 +29,24 @@ class Storage {
     this.set(key, data);
   }
 
-  addTabColor(color: string, title: string): void {
+  remove(key: string, value: any): void {
+    let data = this.storage.get(key) as any[];
+    if (data) {
+      const index = data.findIndex(
+        (item) => JSON.stringify(item) === JSON.stringify(value)
+      );
+      if (index !== -1) {
+        data.splice(index, 1);
+        this.set(key, data);
+      }
+    }
+  }
+
+  addTabColor(task: string, title: string): void {
     let tabs = this.get("tabs");
     if (!tabs) tabs = {};
-    if (!tabs[color]) {
-      tabs[color] = [];
+    if (!tabs[task]) {
+      tabs[task] = [];
     }
     for (const i in tabs) {
       const _tabsColor = tabs[i];
@@ -41,7 +54,7 @@ class Storage {
         return a != title;
       });
     }
-    tabs[color].push(title);
+    tabs[task].push(title);
     this.set("tabs", tabs);
   }
 
@@ -57,7 +70,7 @@ class Storage {
   }
 
   clearTabColor(): void {
-    const tabs = {}
+    const tabs = {};
     this.set("tabs", tabs);
   }
 
@@ -66,7 +79,7 @@ class Storage {
     const colorName = Object.keys(color)[0];
     colors[colorName] = {
       background: color[colorName].background,
-      color: color[colorName].color
+      color: color[colorName].color,
     };
     this.set("customColors", colors);
   }
