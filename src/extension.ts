@@ -15,6 +15,7 @@ import * as path from "path";
 import * as os from "os";
 import * as fs from "fs";
 import { generateCssFile, reloadCss, setColor, unsetColor } from "./color_tab";
+let storage_: any = null;
 
 const collator = new Intl.Collator(undefined, {
   numeric: true,
@@ -101,6 +102,37 @@ async function addFileToTask(
     setColor(context, task.id, task.color, fileUri[0].fsPath);
   }
 }
+
+async function addActiveFileToTask(taskManagerProvider: TaskManagerProvider, context: vscode.ExtensionContext) {
+	const activeEditor = vscode.window.activeTextEditor;
+  
+	if (!activeEditor) {
+	  vscode.window.showErrorMessage('No active file to add to task.');
+	  return;
+	}
+  
+	const activeFilePath = activeEditor.document.uri.fsPath;
+  
+	// Prompt the user to select a task.
+	const tasks = taskManagerProvider.tasks; // Replace with your function to get the list of tasks.
+	const pickedTask = await vscode.window.showQuickPick(
+	  tasks.map((task: Task) => task.name), // Replace 'name' with the appropriate task property.
+	  { placeHolder: 'Select a task to add the active file to' }
+	);
+  
+	if (!pickedTask) {
+	  return;
+	}
+  
+	// Find the selected task and add the active file path to it.
+	const task = tasks.find((task: Task) => task.name === pickedTask); // Replace 'name' with the appropriate task property.
+	if (task) {
+		taskManagerProvider.addFileToTask(task, activeFilePath)
+		setColor(context, task.id, task.color, activeFilePath);
+	} else {
+	  vscode.window.showErrorMessage('Task not found.');
+	}
+  }
 
 async function removeFileFromTask(
   taskManagerProvider: TaskManagerProvider,
@@ -224,6 +256,7 @@ async function sortAllOpenedEditors(tabGroups: readonly vscode.TabGroup[], task:
         }
     }
 }
+
 async function completeTask(
   taskManagerProvider: TaskManagerProvider,
   task: Task,
@@ -389,7 +422,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   const taskManagerProvider = new TaskManagerProvider(context, storage);
   const activeTaskProvider = new ActiveTaskProvider(context, storage);
-  const completedTaskProvider = new CompletedTaskProvider(context, storage);
+  const completedTaskProvider = new CompletedTaskProvider(context, storage, taskManagerProvider);
   context.subscriptions.push(
     vscode.window.registerTreeDataProvider(
       "taskManagerView",
@@ -403,6 +436,9 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("taskManager.createTask", () =>
       createTask(taskManagerProvider)
     ),
+	vscode.commands.registerCommand('taskManager.addActiveFileToTask', async () => {
+		await addActiveFileToTask(taskManagerProvider, context);
+	  }),
     vscode.commands.registerCommand(
       "taskManager.removeTask",
       (taskTreeItem: TaskTreeItem) =>
@@ -424,8 +460,9 @@ export function activate(context: vscode.ExtensionContext) {
     ),
     vscode.commands.registerCommand(
       "taskManager.completeTask",
-      (taskTreeItem: TaskTreeItem) =>
+      async (taskTreeItem: TaskTreeItem) => {
         completeTask(taskManagerProvider, taskTreeItem.task, context)
+	  }
     ),
     vscode.commands.registerCommand(
       "taskManager.uncompleteTask",
@@ -479,3 +516,24 @@ export function activate(context: vscode.ExtensionContext) {
     })
   );
 }
+
+export async function deactivate(context: vscode.ExtensionContext) {
+	let bootstrapPath = '';
+	if (require.main && require.main.filename) {
+		bootstrapPath = path.join(path.dirname(require.main.filename), 'bootstrap-window.js');
+	} else {
+		// Handle the case when require.main is undefined
+		console.error('Could not determine the bootstrap-window.js path');
+	}
+	const bootstrap = new Core(context, bootstrapPath);
+	if (context) {
+	  const storage = new Storage(context);
+	  storage.set("firstActivation", false);
+	  storage.set("secondActivation", false);
+	}
+	else {
+	  storage_.update("firstActivation", false);
+	  storage_.update("secondActivation", false);
+	}
+	bootstrap.remove("watcher").write();
+  }

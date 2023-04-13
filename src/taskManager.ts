@@ -57,7 +57,6 @@ export class TaskTreeItem extends vscode.TreeItem {
         arguments: [task],
       };
     } else if (type === "file" && taskFile) {
-      // setColor(context, task.color, taskFile.filePath)
       this.command = {
         command: "taskManager.openTaskFile",
         title: "Open Task File",
@@ -191,6 +190,17 @@ export class ActiveTaskProvider extends TaskManagerProvider {
 
 // CompletedTaskProvider class
 export class CompletedTaskProvider extends TaskManagerProvider {
+
+  private taskManagerProvider: TaskManagerProvider;
+  constructor(
+    context: vscode.ExtensionContext,
+    storage: Storage,
+    taskManagerProvider: TaskManagerProvider
+  ) {
+    super(context, storage);
+    this.taskManagerProvider = taskManagerProvider;
+  }
+
   getChildren(element?: TaskTreeItem): Thenable<TaskTreeItem[]> {
     if (!element) {
       return Promise.resolve(
@@ -209,6 +219,8 @@ export class CompletedTaskProvider extends TaskManagerProvider {
       tasks[taskIndex].isComplete = false;
       this.storage.set("tasks", tasks);
       this.refresh();
+      this.taskManagerProvider.refresh()
     }
+    
   }
 }

@@ -1,8 +1,13 @@
 {
+  "publisher": "JakobiLee",
   "name": "file-organizer",
   "displayName": "file_organizer",
   "description": "",
-  "version": "0.0.1",
+  "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kobilee/task-file-organizer.git"
+  },
   "engines": {
     "vscode": "^1.76.0"
   },
@@ -45,6 +50,12 @@
         "title": "Create Task",
         "category": "Task Manager"
       },
+      {
+        "command": "taskManager.addActiveFileToTask",
+        "title": "Add Current File to Task",
+        "category": "Task Manager"
+      },
+
       {
         "command": "taskManager.toggleTaskCompletion",
         "title": "Toggle Task Completion",
@@ -162,6 +173,19 @@
           "command": "taskManager.removeTask",
           "when": "view == taskManagerView && viewItem == task",
           "group": "2_taskActions"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "taskManager.createTask",
+          "when": "view == taskManagerView",
+          "group": "navigation"
+        }
+      ],
+      "editor/title/context": [
+        {
+          "command": "taskManager.addActiveFileToTask",
+          "group": "taskManager"
         }
       ]
     }
