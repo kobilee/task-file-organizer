@@ -192,13 +192,16 @@ export class ActiveTaskProvider extends TaskManagerProvider {
 export class CompletedTaskProvider extends TaskManagerProvider {
 
   private taskManagerProvider: TaskManagerProvider;
+  private activeTaskProvider: ActiveTaskProvider;
   constructor(
     context: vscode.ExtensionContext,
     storage: Storage,
-    taskManagerProvider: TaskManagerProvider
+    taskManagerProvider: TaskManagerProvider,
+    activeTaskProvider: ActiveTaskProvider
   ) {
     super(context, storage);
     this.taskManagerProvider = taskManagerProvider;
+    this.activeTaskProvider = activeTaskProvider;
   }
 
   getChildren(element?: TaskTreeItem): Thenable<TaskTreeItem[]> {
@@ -220,6 +223,7 @@ export class CompletedTaskProvider extends TaskManagerProvider {
       this.storage.set("tasks", tasks);
       this.refresh();
       this.taskManagerProvider.refresh()
+      this.activeTaskProvider.refresh()
     }
     
   }

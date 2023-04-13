@@ -259,11 +259,15 @@ async function sortAllOpenedEditors(tabGroups: readonly vscode.TabGroup[], task:
 
 async function completeTask(
   taskManagerProvider: TaskManagerProvider,
+  completedTaskProvider: CompletedTaskProvider,
+  activeTaskProvider: ActiveTaskProvider,
   task: Task,
   context: vscode.ExtensionContext
 ) {
   unsetColorLoop(task, context);
   taskManagerProvider.updateTaskToComplete(task.id);
+  completedTaskProvider.refresh()
+  activeTaskProvider.refresh()
 }
 
 function promptRestart() {
@@ -422,7 +426,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   const taskManagerProvider = new TaskManagerProvider(context, storage);
   const activeTaskProvider = new ActiveTaskProvider(context, storage);
-  const completedTaskProvider = new CompletedTaskProvider(context, storage, taskManagerProvider);
+  const completedTaskProvider = new CompletedTaskProvider(context, storage, taskManagerProvider, activeTaskProvider);
   context.subscriptions.push(
     vscode.window.registerTreeDataProvider(
       "taskManagerView",
@@ -461,7 +465,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       "taskManager.completeTask",
       async (taskTreeItem: TaskTreeItem) => {
-        completeTask(taskManagerProvider, taskTreeItem.task, context)
+        completeTask(taskManagerProvider, completedTaskProvider, activeTaskProvider, taskTreeItem.task, context)
 	  }
     ),
     vscode.commands.registerCommand(
