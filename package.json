@@ -3,7 +3,7 @@
   "name": "file-organizer",
   "displayName": "Task_Manager",
   "description": "",
-  "version": "0.1.4",
+  "version": "0.1.6",
   "repository": {
     "type": "git",
     "url": "https://github.com/kobilee/task-file-organizer.git"
@@ -53,42 +53,42 @@
       {
         "command": "taskManager.addActiveFileToTask",
         "title": "Add Current File to Task",
-        "category": "Task Manager"
+        "commandPalette": false
       },
       {
         "command": "taskManager.addActiveFileToTaskcontext",
         "title": "Add active File to Task",
-        "category": "Task Manager"
+        "commandPalette": false
       },
       {
         "command": "taskManager.toggleTaskCompletion",
         "title": "Toggle Task Completion",
-        "category": "Task Manager"
+        "commandPalette": false
       },
       {
         "command": "taskManager.addFileToTask",
         "title": "Add File to Task",
-        "category": "Task Manager"
+        "commandPalette": false
       },
       {
         "command": "taskManager.openTaskFile",
         "title": "Open Task File",
-        "category": "Task Manager"
+        "commandPalette": false
       },
       {
         "command": "taskManager.openAllFilesInTask",
         "title": "Open All Files in Task",
-        "category": "Task Manager"
+        "commandPalette": false
       },
       {
         "command": "taskManager.closeAllFilesInTask",
         "title": "Close All Files in Task",
-        "category": "Task Manager"
+        "commandPalette": false
       },
       {
         "command": "taskManager.sortAllOpenedEditors",
         "title": "Sort All Files in Task",
-        "category": "Task Manager"
+        "commandPalette": false
       },
       {
         "command": "tabscolor.debugColors",
@@ -103,27 +103,27 @@
       {
         "command": "taskManager.removeFileFromTask",
         "title": "Remove File from Task",
-        "category": "Task Manager"
+        "commandPalette": false
       },
       {
         "command": "taskManager.removeTask",
         "title": "Remove Task",
-        "category": "Task Manager"
+        "commandPalette": false
       },
       {
         "command": "taskManager.activateTask",
         "title": "Activate Task",
-        "category": "Task Manager"
+        "commandPalette": false
       },
       {
         "command": "taskManager.completeTask",
         "title": "Complete Task",
-        "category": "Task Manager"
+        "commandPalette": false
       },
       {
         "command": "taskManager.uncompleteTask",
         "title": "Uncomplete Task",
-        "category": "Task Manager"
+        "commandPalette": false
       }
     ],
     "menus": {

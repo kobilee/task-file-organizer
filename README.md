@@ -52,8 +52,6 @@ After installing the extension, you can access the Task Manager view from the Ac
 ## Known Issues
 After installing the extension, you may see a message saying "Your Code installation is corrupt..." Click on the gear icon and choose "Don't show again."
 
-command plate function have not been tested
-
 ## Release Notes
 This is a beta, please report any bug you find!
 
