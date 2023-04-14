@@ -27,7 +27,7 @@ This Visual Studio Code extension provides a simple task manager, allowing you t
     - `Add File to Task`: Adds a file to a Task, avaliable in the task the context menu
     - `Remove Task`: Deletes a Task, avaliable in the task the context menu
     - `Activate Task`: Colors all File in task based on the selected Task and bring bring all file together, avaliable in the task the context menu
-    - `Complete Task`: Marks a task as complete, complete tasks are not vissble in the task manger tab and can be seen in the "Completed Tasks" explained below, avaliable in the task the context menu
+    - `Complete Task`: Marks a task as complete, complete tasks are not visable in the task manger tab and can be seen in the "Completed Tasks" explained below, avaliable in the task the context menu
     - `Close All Files in Task`: Closes all open files in Task, avaliable in the task the context menu
     - `Open All Files in Task`: Opens all files in Task, avaliable in the task the context menu
     - `Sort All Files in Task`: Sorts all open files in Task so they display next to one another, avaliable in the task the context menu
@@ -57,4 +57,4 @@ command plate function have not been tested
 ## Release Notes
 This is a beta, please report any bug you find!
 
-### 0.1.0
+### 0.1.4

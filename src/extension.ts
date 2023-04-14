@@ -123,6 +123,8 @@ async function addActiveFileToTask(taskManagerProvider: TaskManagerProvider, con
 	if (!pickedTask) {
 	  return;
 	}
+
+  
   
 	// Find the selected task and add the active file path to it.
 	const task = tasks.find((task: Task) => task.name === pickedTask); // Replace 'name' with the appropriate task property.
@@ -133,6 +135,21 @@ async function addActiveFileToTask(taskManagerProvider: TaskManagerProvider, con
 	  vscode.window.showErrorMessage('Task not found.');
 	}
   }
+
+async function addActiveFileToTaskcontext(taskManagerProvider: TaskManagerProvider, task: Task, context: vscode.ExtensionContext) {
+  const activeEditor = vscode.window.activeTextEditor;
+  
+  if (!activeEditor) {
+    vscode.window.showErrorMessage('No active file to add to task.');
+    return;
+  }
+  
+  const activeFilePath = activeEditor.document.uri.fsPath;
+  
+
+  taskManagerProvider.addFileToTask(task, activeFilePath);
+  setColor(context, task.id, task.color, activeFilePath);
+}
 
 async function removeFileFromTask(
   taskManagerProvider: TaskManagerProvider,
@@ -443,6 +460,9 @@ export function activate(context: vscode.ExtensionContext) {
 	vscode.commands.registerCommand('taskManager.addActiveFileToTask', async () => {
 		await addActiveFileToTask(taskManagerProvider, context);
 	  }),
+    vscode.commands.registerCommand('taskManager.addActiveFileToTaskcontext', async (taskTreeItem: TaskTreeItem) => {
+      await addActiveFileToTaskcontext(taskManagerProvider, taskTreeItem.task,  context);
+      }),
     vscode.commands.registerCommand(
       "taskManager.removeTask",
       (taskTreeItem: TaskTreeItem) =>

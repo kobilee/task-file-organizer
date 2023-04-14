@@ -3,7 +3,7 @@
   "name": "file-organizer",
   "displayName": "Task_Manager",
   "description": "",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "repository": {
     "type": "git",
     "url": "https://github.com/kobilee/task-file-organizer.git"
@@ -55,7 +55,11 @@
         "title": "Add Current File to Task",
         "category": "Task Manager"
       },
-
+      {
+        "command": "taskManager.addActiveFileToTaskcontext",
+        "title": "Add active File to Task",
+        "category": "Task Manager"
+      },
       {
         "command": "taskManager.toggleTaskCompletion",
         "title": "Toggle Task Completion",
@@ -161,6 +165,11 @@
         },
         {
           "command": "taskManager.addFileToTask",
+          "when": "view == taskManagerView && viewItem == task",
+          "group": "2_taskActions"
+        },
+        {
+          "command": "taskManager.addActiveFileToTaskcontext",
           "when": "view == taskManagerView && viewItem == task",
           "group": "2_taskActions"
         },

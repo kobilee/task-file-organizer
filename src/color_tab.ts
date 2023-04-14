@@ -25,6 +25,25 @@ function formatTabTitle(title: string): string {
   return title;
 }
 
+function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result
+    ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16),
+      }
+    : null;
+}
+
+function getContrastColor(hexColor: string): string {
+  const rgb = hexToRgb(hexColor);
+  if (!rgb) return "white";
+
+  const luminance = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
+  return luminance > 0.5 ? "black" : "white";
+}
+
 export function generateCssFile(context: vscode.ExtensionContext): void {
   const storage = new Storage(context);
   // set all colors
@@ -145,9 +164,10 @@ export function setColor(
   title: string
 ): void {
   const storage = new Storage(context);
+  const contrastColor = getContrastColor(color);
   if (storage.get("patchedBefore")) {
     if (storage.get("secondActivation")) {
-      var colors = { [task]: { background: color, color: "white" } };
+      var colors = { [task]: { background: color, color: contrastColor } };
       storage.addCustomColor(colors);
       storage.addTabColor(task, title.replace(/\\/g, "\\\\"));
       generateCssFile(context);
