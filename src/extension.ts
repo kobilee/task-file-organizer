@@ -123,11 +123,9 @@ async function addActiveFileToTask(taskManagerProvider: TaskManagerProvider, con
 	if (!pickedTask) {
 	  return;
 	}
-
-  
   
 	// Find the selected task and add the active file path to it.
-	const task = tasks.find((task: Task) => task.name === pickedTask); // Replace 'name' with the appropriate task property.
+	const task = tasks.find((task: Task) => task.name === pickedTask);
 	if (task) {
 		taskManagerProvider.addFileToTask(task, activeFilePath)
 		setColor(context, task.id, task.color, activeFilePath);
@@ -286,6 +284,7 @@ async function completeTask(
   completedTaskProvider.refresh()
   activeTaskProvider.refresh()
 }
+
 
 function promptRestart() {
   vscode.window.showInformationMessage(
@@ -460,6 +459,9 @@ export function activate(context: vscode.ExtensionContext) {
 	vscode.commands.registerCommand('taskManager.addActiveFileToTask', async () => {
 		await addActiveFileToTask(taskManagerProvider, context);
 	  }),
+      vscode.commands.registerCommand('taskManager.addAndCommitFiles', async (taskTreeItem: TaskTreeItem) => {
+        await taskManagerProvider.addAndCommitFiles(taskTreeItem.task);
+      }),
     vscode.commands.registerCommand('taskManager.addActiveFileToTaskcontext', async (taskTreeItem: TaskTreeItem) => {
       await addActiveFileToTaskcontext(taskManagerProvider, taskTreeItem.task,  context);
       }),

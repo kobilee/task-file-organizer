@@ -91,6 +91,11 @@
         "commandPalette": false
       },
       {
+        "command": "taskManager.addAndCommitFiles",
+        "title": "Add and Commit Files in Task",
+        "commandPalette": false
+      },
+      {
         "command": "tabscolor.debugColors",
         "title": "Debug",
         "category": "Task Manager"
@@ -128,6 +133,11 @@
     ],
     "menus": {
       "view/item/context": [
+        {
+          "command": "taskManager.addAndCommitFiles",
+          "when": "view == taskManagerView && viewItem == task",
+          "group": "5_taskActions"
+        },
         {
           "command": "taskManager.uncompleteTask",
           "when": "view == completedTasks && viewItem == task",

@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import { generateUniqueId } from "./extension";
 import { setColor } from "./color_tab";
 import Storage from "./storage";
+import * as cp from 'child_process';
 
 export interface Task {
   id: string;
@@ -86,6 +87,34 @@ export class TaskManagerProvider
     return this.storage.get("tasks") || [];
   }
 
+  async addAndCommitFiles(task:Task): Promise<void> {
+  
+    // Prompt the user for the commit message
+    const commitMessage = await vscode.window.showInputBox({
+      prompt: 'Enter the commit message',
+      placeHolder: 'Commit message',
+    });
+  
+    // If the user didn't provide a commit message, return early
+    if (!commitMessage) {
+      return;
+    }
+  
+    // Iterate over all files in the task
+    for (const file of task.files) {
+      // Add file
+      cp.execSync(`git add ${file.filePath}`, { cwd: vscode.workspace.rootPath });
+  
+      // Commit the file
+      cp.execSync(`git commit -m "${commitMessage}" ${file.filePath}`, {
+        cwd: vscode.workspace.rootPath,
+      });
+    }
+  
+    vscode.window.showInformationMessage(`Files in task ${task.name} have been added and committed.`);
+  }
+
+  
   public getTaskByFilePath(filePath: string): Task | undefined {
     return this.tasks.find((task) =>
       task.files.some((file) => file.filePath === filePath)
@@ -122,11 +151,11 @@ export class TaskManagerProvider
     }
   }
 
-  async removeFileFromTask(task_id: string, rfile: TaskFile) {
+  async removeFileFromTask(taskId: string, rfile: TaskFile) {
     // Find the index of the file in the task.files array
 
     const tasks = this.tasks;
-    const taskIndex = tasks.findIndex((t) => t.id === task_id);
+    const taskIndex = tasks.findIndex((t) => t.id === taskId);
     if (taskIndex !== -1) {
       const index = tasks[taskIndex].files.findIndex(
         (file) => file.filePath === rfile.filePath
@@ -222,8 +251,8 @@ export class CompletedTaskProvider extends TaskManagerProvider {
       tasks[taskIndex].isComplete = false;
       this.storage.set("tasks", tasks);
       this.refresh();
-      this.taskManagerProvider.refresh()
-      this.activeTaskProvider.refresh()
+      this.taskManagerProvider.refresh();
+      this.activeTaskProvider.refresh();
     }
     
   }
