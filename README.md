@@ -16,6 +16,7 @@ This Visual Studio Code extension provides a simple task manager, allowing you t
 - Update a task's completion status
 - Show active and completed tasks in separate sections in the Explorer tab
 - Context menu to complete/uncomplete tasks
+- add and commit tasks
 
 ## Usage
 

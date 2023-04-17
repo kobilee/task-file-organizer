@@ -89,23 +89,17 @@ export class TaskManagerProvider
 
   async addAndCommitFiles(task:Task): Promise<void> {
   
-    // Prompt the user for the commit message
     const commitMessage = await vscode.window.showInputBox({
       prompt: 'Enter the commit message',
       placeHolder: 'Commit message',
     });
   
-    // If the user didn't provide a commit message, return early
     if (!commitMessage) {
       return;
     }
   
-    // Iterate over all files in the task
     for (const file of task.files) {
-      // Add file
       cp.execSync(`git add ${file.filePath}`, { cwd: vscode.workspace.rootPath });
-  
-      // Commit the file
       cp.execSync(`git commit -m "${commitMessage}" ${file.filePath}`, {
         cwd: vscode.workspace.rootPath,
       });
@@ -120,6 +114,22 @@ export class TaskManagerProvider
       task.files.some((file) => file.filePath === filePath)
     );
   }
+
+  async renameTask(task: Task): Promise<void> {
+    const newTaskName = await vscode.window.showInputBox({
+      prompt: "Enter the new task name",
+      value: task.name,
+    });
+
+    if (newTaskName && newTaskName !== task.name) {
+      const taskIndex = this.tasks.findIndex((t) => t.id === task.id);
+      if (taskIndex !== -1) {
+        this.tasks[taskIndex].name = newTaskName;
+        this.refresh();
+      }
+    }
+  }
+
 
   addTask(task: Task): void {
     this.storage.add("tasks", task);

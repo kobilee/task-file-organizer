@@ -52,48 +52,39 @@
       },
       {
         "command": "taskManager.addActiveFileToTask",
-        "title": "Add Current File to Task",
-        "commandPalette": false
+        "title": "Add Current File to Task"     
       },
       {
         "command": "taskManager.addActiveFileToTaskcontext",
-        "title": "Add active File to Task",
-        "commandPalette": false
+        "title": "Add active File to Task"      
       },
       {
         "command": "taskManager.toggleTaskCompletion",
-        "title": "Toggle Task Completion",
-        "commandPalette": false
+        "title": "Toggle Task Completion"      
       },
       {
         "command": "taskManager.addFileToTask",
-        "title": "Add File to Task",
-        "commandPalette": false
+        "title": "Add File to Task"      
       },
       {
         "command": "taskManager.openTaskFile",
-        "title": "Open Task File",
-        "commandPalette": false
+        "title": "Open Task File"      
       },
       {
         "command": "taskManager.openAllFilesInTask",
-        "title": "Open All Files in Task",
-        "commandPalette": false
+        "title": "Open All Files in Task"      
       },
       {
         "command": "taskManager.closeAllFilesInTask",
-        "title": "Close All Files in Task",
-        "commandPalette": false
+        "title": "Close All Files in Task"      
       },
       {
         "command": "taskManager.sortAllOpenedEditors",
-        "title": "Sort All Files in Task",
-        "commandPalette": false
+        "title": "Sort All Files in Task"      
       },
       {
         "command": "taskManager.addAndCommitFiles",
-        "title": "Add and Commit Files in Task",
-        "commandPalette": false
+        "title": "Add and Commit Files in Task"      
       },
       {
         "command": "tabscolor.debugColors",
@@ -104,94 +95,160 @@
         "command": "tabscolor.resetTabs",
         "title": "Reset",
         "category": "Task Manager"
+      
       },
       {
         "command": "taskManager.removeFileFromTask",
-        "title": "Remove File from Task",
-        "commandPalette": false
+        "title": "Remove File from Task"      
       },
       {
         "command": "taskManager.removeTask",
-        "title": "Remove Task",
-        "commandPalette": false
+        "title": "Remove Task"      
       },
       {
         "command": "taskManager.activateTask",
-        "title": "Activate Task",
-        "commandPalette": false
+        "title": "Activate Task"      
       },
       {
         "command": "taskManager.completeTask",
-        "title": "Complete Task",
-        "commandPalette": false
+        "title": "Complete Task"      
       },
       {
         "command": "taskManager.uncompleteTask",
-        "title": "Uncomplete Task",
-        "commandPalette": false
-      }
+        "title": "Uncomplete Task"      
+      },
+      {
+        "command": "taskManager.renameTask",
+        "title": "Rename Task"      }
     ],
     "menus": {
-      "view/item/context": [
+      "commandPalette": [
         {
-          "command": "taskManager.addAndCommitFiles",
-          "when": "view == taskManagerView && viewItem == task",
-          "group": "5_taskActions"
+          "command": "taskManager.addActiveFileToTask",
+          "when": "false"
         },
         {
-          "command": "taskManager.uncompleteTask",
-          "when": "view == completedTasks && viewItem == task",
-          "group": "5_taskActions"
+          "command": "taskManager.addActiveFileToTaskcontext",
+          "when": "false"
         },
         {
-          "command": "taskManager.removeFileFromTask",
-          "when": "view == taskManagerView && viewItem == file",
-          "group": "4_taskActions"
+          "command": "taskManager.toggleTaskCompletion",
+          "when": "false"
+        },
+        {
+          "command": "taskManager.addFileToTask",
+          "when": "false"
+        },
+        {
+          "command": "taskManager.openTaskFile",
+          "when": "false"
         },
         {
           "command": "taskManager.openAllFilesInTask",
-          "when": "view == taskManagerView && viewItem == task",
-          "group": "1_taskActions"
+          "when": "false"
         },
         {
-          "command": "taskManager.completeTask",
-          "when": "view == taskManagerView && viewItem == task",
-          "group": "3_taskActions"
+          "command": "taskManager.closeAllFilesInTask",
+          "when": "false"
+        },
+        {
+          "command": "taskManager.sortAllOpenedEditors",
+          "when": "false"
+        },
+        {
+          "command": "taskManager.addAndCommitFiles",
+          "when": "false"
+        },
+        {
+          "command": "taskManager.removeFileFromTask",
+          "when": "false"
+        },
+        {
+          "command": "taskManager.removeTask",
+          "when": "false"
         },
         {
           "command": "taskManager.activateTask",
+          "when": "false"
+        },
+        {
+          "command": "taskManager.completeTask",
+          "when": "false"
+        },
+        {
+          "command": "taskManager.uncompleteTask",
+          "when": "false"
+        },
+        {
+          "command": "taskManager.renameTask",
+          "when": "false"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "taskManager.openAllFilesInTask",
           "when": "view == taskManagerView && viewItem == task",
-          "group": "3_taskActions"
+          "group": "1_openCloseFiles"
         },
         {
           "command": "taskManager.sortAllOpenedEditors",
           "when": "view == taskManagerView && viewItem == task",
-          "group": "1_taskActions"
+          "group": "1_openCloseFiles"
         },
         {
           "command": "taskManager.closeAllFilesInTask",
           "when": "view == taskManagerView && viewItem == task",
-          "group": "1_taskActions"
-        },
-        {
-          "command": "taskManager.addFileToTask",
-          "when": "view == taskManagerView && viewItem == task",
-          "group": "2_taskActions"
-        },
-        {
-          "command": "taskManager.addActiveFileToTaskcontext",
-          "when": "view == taskManagerView && viewItem == task",
-          "group": "2_taskActions"
+          "group": "1_openCloseFiles"
         },
         {
           "command": "taskManager.createTask",
           "when": "view == taskManagerView && viewItem == task",
-          "group": "2_taskActions"
+          "group": "2_addRemoveTask"
         },
         {
           "command": "taskManager.removeTask",
           "when": "view == taskManagerView && viewItem == task",
-          "group": "2_taskActions"
+          "group": "2_addRemoveTask"
+        },
+        {
+          "command": "taskManager.renameTask",
+          "when": "view == taskManagerView && viewItem == task",
+          "group": "2_addRemoveTask"
+        },
+        {
+          "command": "taskManager.addFileToTask",
+          "when": "view == taskManagerView && viewItem == task",
+          "group": "3_addRemoveFile"
+        },
+        {
+          "command": "taskManager.addActiveFileToTaskcontext",
+          "when": "view == taskManagerView && viewItem == task",
+          "group": "3_addRemoveFile"
+        },
+        {
+          "command": "taskManager.removeFileFromTask",
+          "when": "view == taskManagerView && viewItem == file",
+          "group": "3_addRemoveFile"
+        },
+        {
+          "command": "taskManager.completeTask",
+          "when": "view == taskManagerView && viewItem == task",
+          "group": "4_taskCompletion"
+        },
+        {
+          "command": "taskManager.uncompleteTask",
+          "when": "view == completedTasks && viewItem == task",
+          "group": "4_taskCompletion"
+        },
+        {
+          "command": "taskManager.activateTask",
+          "when": "view == taskManagerView && viewItem == task",
+          "group": "5_taskActivation"
+        },
+        {
+          "command": "taskManager.addAndCommitFiles",
+          "when": "view == taskManagerView && viewItem == task",
+          "group": "6_gitActions"
         }
       ],
       "view/title": [

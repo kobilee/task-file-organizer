@@ -113,10 +113,9 @@ async function addActiveFileToTask(taskManagerProvider: TaskManagerProvider, con
   
 	const activeFilePath = activeEditor.document.uri.fsPath;
   
-	// Prompt the user to select a task.
-	const tasks = taskManagerProvider.tasks; // Replace with your function to get the list of tasks.
+	const tasks = taskManagerProvider.tasks;
 	const pickedTask = await vscode.window.showQuickPick(
-	  tasks.map((task: Task) => task.name), // Replace 'name' with the appropriate task property.
+	  tasks.map((task: Task) => task.name), 
 	  { placeHolder: 'Select a task to add the active file to' }
 	);
   
@@ -132,7 +131,7 @@ async function addActiveFileToTask(taskManagerProvider: TaskManagerProvider, con
 	} else {
 	  vscode.window.showErrorMessage('Task not found.');
 	}
-  }
+}
 
 async function addActiveFileToTaskcontext(taskManagerProvider: TaskManagerProvider, task: Task, context: vscode.ExtensionContext) {
   const activeEditor = vscode.window.activeTextEditor;
@@ -444,6 +443,7 @@ export function activate(context: vscode.ExtensionContext) {
   const activeTaskProvider = new ActiveTaskProvider(context, storage);
   const completedTaskProvider = new CompletedTaskProvider(context, storage, taskManagerProvider, activeTaskProvider);
   context.subscriptions.push(
+
     vscode.window.registerTreeDataProvider(
       "taskManagerView",
       taskManagerProvider
@@ -453,6 +453,9 @@ export function activate(context: vscode.ExtensionContext) {
       "completedTasks",
       completedTaskProvider
     ),
+    vscode.commands.registerCommand('taskManager.renameTask', async (taskTreeItem: TaskTreeItem) => {
+      taskManagerProvider.renameTask(taskTreeItem.task)
+    }),
     vscode.commands.registerCommand("taskManager.createTask", () =>
       createTask(taskManagerProvider)
     ),
