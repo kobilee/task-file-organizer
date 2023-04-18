@@ -1,9 +1,9 @@
 {
   "publisher": "JakobiLee",
   "name": "file-organizer",
-  "displayName": "Task_Manager",
+  "displayName": "Task Manager",
   "description": "",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "repository": {
     "type": "git",
     "url": "https://github.com/kobilee/task-file-organizer.git"
@@ -119,7 +119,8 @@
       },
       {
         "command": "taskManager.renameTask",
-        "title": "Rename Task"      }
+        "title": "Rename Task"
+      }
     ],
     "menus": {
       "commandPalette": [
@@ -185,6 +186,12 @@
         }
       ],
       "view/item/context": [
+        
+        {
+          "command": "taskManager.generateNewRandomColorAndUpdateSvg",
+          "when": "view == taskManagerView && viewItem == task",
+          "group": "1_openCloseFiles"
+        },
         {
           "command": "taskManager.openAllFilesInTask",
           "when": "view == taskManagerView && viewItem == task",

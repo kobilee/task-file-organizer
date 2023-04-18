@@ -84,10 +84,10 @@ class Storage {
     this.set("customColors", colors);
   }
 
-  removeCustomColor(colorName: string): void {
-    const colors = this.get("customColors") || {};
-    delete colors[colorName];
-    this.set("customColors", colors);
+  removeTab(tab: string): void {
+    const tabs = this.get("tabs") || {};
+    delete tabs[tab];
+    this.set("tabs", tabs);
   }
 
   emptyTabs(): void {

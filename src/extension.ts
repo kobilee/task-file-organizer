@@ -39,7 +39,7 @@ export function generateUniqueId() {
   );
 }
 
-function generateRandomColor(): string {
+export function generateRandomColor(): string {
   return "#" + Math.floor(Math.random() * 16777215).toString(16);
 }
 
@@ -59,19 +59,24 @@ async function createTask(taskManagerProvider: TaskManagerProvider) {
   }
 }
 
-function unsetColorLoop(task: Task, context: vscode.ExtensionContext) {
+function unsetColorLoop(task: Task, context: vscode.ExtensionContext, storage: Storage) {
+  const tabs = storage.get("tabs") || {};
   for (let i = 0; i < task.files.length; i++) {
     const file = task.files[i];
-    unsetColor(context, file.filePath.replace(/\\/g, "\\\\"));
+    if (tabs[task.id].includes(file.filePath.replace(/\\/g, "\\\\"))){
+      unsetColor(context, file.filePath.replace(/\\/g, "\\\\"));
+    }
   }
 }
 
 async function removeTask(
   taskManagerProvider: TaskManagerProvider,
   task: Task,
-  context: vscode.ExtensionContext
+  context: vscode.ExtensionContext, 
+  storage: Storage
 ) {
-  unsetColorLoop(task, context);
+  unsetColorLoop(task, context, storage);
+  storage.removeTab(task.id)
   taskManagerProvider.removeTask(task);
 }
 
@@ -118,14 +123,21 @@ async function addActiveFileToTask(taskManagerProvider: TaskManagerProvider, con
 	  tasks.map((task: Task) => task.name), 
 	  { placeHolder: 'Select a task to add the active file to' }
 	);
-  
-	if (!pickedTask) {
+
+  if (!pickedTask) {
 	  return;
 	}
-  
-	// Find the selected task and add the active file path to it.
-	const task = tasks.find((task: Task) => task.name === pickedTask);
+
+  const task = tasks.find((task: Task) => task.name === pickedTask);
 	if (task) {
+    const fileExistsInTask = task.files.some(
+      (file) => file.filePath === activeFilePath
+    );
+  
+    if (fileExistsInTask) {
+      vscode.window.showErrorMessage(`The file is already in the task "${task.name}".`);
+      return;
+    }
 		taskManagerProvider.addFileToTask(task, activeFilePath)
 		setColor(context, task.id, task.color, activeFilePath);
 	} else {
@@ -140,9 +152,14 @@ async function addActiveFileToTaskcontext(taskManagerProvider: TaskManagerProvid
     vscode.window.showErrorMessage('No active file to add to task.');
     return;
   }
-  
+  const tasks = taskManagerProvider.tasks;
   const activeFilePath = activeEditor.document.uri.fsPath;
-  
+  const fileExistsInTask = task.files.some((file) => file.filePath === activeFilePath)
+
+  if (fileExistsInTask) {
+    vscode.window.showErrorMessage(`The file is already in the task "${task.name}".`);
+    return;
+  }
 
   taskManagerProvider.addFileToTask(task, activeFilePath);
   setColor(context, task.id, task.color, activeFilePath);
@@ -151,13 +168,17 @@ async function addActiveFileToTaskcontext(taskManagerProvider: TaskManagerProvid
 async function removeFileFromTask(
   taskManagerProvider: TaskManagerProvider,
   taskTreeItem: TaskTreeItem,
-  context: vscode.ExtensionContext
+  context: vscode.ExtensionContext,
+  storage: Storage
 ) {
   const file = JSON.parse(taskTreeItem.fileJSON) as TaskFile;
   if (typeof taskTreeItem.id === "string") {
     const taskId = taskTreeItem.id.split("|")[0];
     taskManagerProvider.removeFileFromTask(taskId, file);
-    unsetColor(context, taskTreeItem.id.split("|")[1].replace(/\\/g, "\\\\"));
+    const tabs = storage.get("tabs") || {}
+    if (tabs[taskId].includes(taskTreeItem.id.split("|")[1].replace(/\\/g, "\\\\"))) {
+      unsetColor(context, taskTreeItem.id.split("|")[1].replace(/\\/g, "\\\\"));
+    }
   } else {
     // Handle the case where taskTreeItem.id is undefined, if necessary
     console.error("taskTreeItem.id is undefined");
@@ -276,9 +297,10 @@ async function completeTask(
   completedTaskProvider: CompletedTaskProvider,
   activeTaskProvider: ActiveTaskProvider,
   task: Task,
-  context: vscode.ExtensionContext
+  context: vscode.ExtensionContext,
+  storage: Storage
 ) {
-  unsetColorLoop(task, context);
+  unsetColorLoop(task, context, storage);
   taskManagerProvider.updateTaskToComplete(task.id);
   completedTaskProvider.refresh()
   activeTaskProvider.refresh()
@@ -429,14 +451,6 @@ export function activate(context: vscode.ExtensionContext) {
     storage.set("secondActivation", true);
   }
 
-  vscode.workspace.onDidChangeConfiguration((e) => {
-    if (e.affectsConfiguration("tabsColor")) {
-      vscode.window.showInformationMessage("tabs colors updated");
-      generateCssFile(context);
-      reloadCss();
-    }
-  });
-
   storage.set("firstActivation", true);
 
   const taskManagerProvider = new TaskManagerProvider(context, storage);
@@ -468,10 +482,11 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('taskManager.addActiveFileToTaskcontext', async (taskTreeItem: TaskTreeItem) => {
       await addActiveFileToTaskcontext(taskManagerProvider, taskTreeItem.task,  context);
       }),
+
     vscode.commands.registerCommand(
       "taskManager.removeTask",
       (taskTreeItem: TaskTreeItem) =>
-        removeTask(taskManagerProvider, taskTreeItem.task, context)
+        removeTask(taskManagerProvider, taskTreeItem.task, context, storage)
     ),
     vscode.commands.registerCommand(
       "taskManager.toggleTaskCompletion",
@@ -485,12 +500,12 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       "taskManager.removeFileFromTask",
       (taskTreeItem: TaskTreeItem) =>
-        removeFileFromTask(taskManagerProvider, taskTreeItem, context)
+        removeFileFromTask(taskManagerProvider, taskTreeItem, context, storage)
     ),
     vscode.commands.registerCommand(
       "taskManager.completeTask",
       async (taskTreeItem: TaskTreeItem) => {
-        completeTask(taskManagerProvider, completedTaskProvider, activeTaskProvider, taskTreeItem.task, context)
+        completeTask(taskManagerProvider, completedTaskProvider, activeTaskProvider, taskTreeItem.task, context, storage)
 	  }
     ),
     vscode.commands.registerCommand(
