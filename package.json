@@ -1,9 +1,9 @@
 {
   "publisher": "JakobiLee",
   "name": "file-organizer",
-  "displayName": "Task Manager",
+  "displayName": "Colored Task Manager",
   "description": "",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "repository": {
     "type": "git",
     "url": "https://github.com/kobilee/task-file-organizer.git"
@@ -45,6 +45,10 @@
       ]
     },
     "commands": [
+      {
+        "command": "extension.openNote",
+        "title": "Open Note"
+      },
       {
         "command": "taskManager.createTask",
         "title": "Create Task",
@@ -102,6 +106,18 @@
         "title": "Remove File from Task"      
       },
       {
+        "command": "taskManager.addNoteToFile",
+        "title": "Add Note"      
+      },
+      {
+        "command": "taskManager.addNoteToFileKeyboard",
+        "title": "Add Note shortcut"      
+      },
+      {
+        "command": "taskManager.removeNoteFromFileCommand",
+        "title": "Remove Note"      
+      },
+      {
         "command": "taskManager.removeTask",
         "title": "Remove Task"      
       },
@@ -120,10 +136,22 @@
       {
         "command": "taskManager.renameTask",
         "title": "Rename Task"
+      },
+      {
+        "command": "taskManager.generateNewRandomColorAndUpdateSvg",
+        "title": "Generate New Random Color"
+      },
+      {
+        "command": "taskManager.addActiveTabToActiveTask",
+        "title": "Add Active Tab to Active Task"
       }
     ],
     "menus": {
       "commandPalette": [
+        {
+          "command": "taskManager.generateNewRandomColorAndUpdateSvg",
+          "when": "false"
+        },
         {
           "command": "taskManager.addActiveFileToTask",
           "when": "false"
@@ -165,6 +193,14 @@
           "when": "false"
         },
         {
+          "command": "taskManager.addNoteToFile",
+          "when": "false"
+        },
+        {
+          "command": "taskManager.addNoteToFileKeyboard",
+          "when": "false"
+        },
+        {
           "command": "taskManager.removeTask",
           "when": "false"
         },
@@ -186,12 +222,6 @@
         }
       ],
       "view/item/context": [
-        
-        {
-          "command": "taskManager.generateNewRandomColorAndUpdateSvg",
-          "when": "view == taskManagerView && viewItem == task",
-          "group": "1_openCloseFiles"
-        },
         {
           "command": "taskManager.openAllFilesInTask",
           "when": "view == taskManagerView && viewItem == task",
@@ -223,10 +253,16 @@
           "group": "2_addRemoveTask"
         },
         {
+          "command": "taskManager.generateNewRandomColorAndUpdateSvg",
+          "when": "view == taskManagerView && viewItem == task",
+          "group": "2_addRemoveTask"
+        },
+        {
           "command": "taskManager.addFileToTask",
           "when": "view == taskManagerView && viewItem == task",
           "group": "3_addRemoveFile"
         },
+        
         {
           "command": "taskManager.addActiveFileToTaskcontext",
           "when": "view == taskManagerView && viewItem == task",
@@ -236,6 +272,16 @@
           "command": "taskManager.removeFileFromTask",
           "when": "view == taskManagerView && viewItem == file",
           "group": "3_addRemoveFile"
+        },
+        {
+          "command": "taskManager.addNoteToFile",
+          "when": "view == taskManagerView && viewItem == file",
+          "group": "3_addRemoveFile"
+        },
+        {
+          "command": "taskManager.removeNoteFromFileCommand",
+          "when": "view == taskManagerView && viewItem == note",
+          "group": "3_addRemoveNote"
         },
         {
           "command": "taskManager.completeTask",
@@ -271,7 +317,19 @@
           "group": "taskManager"
         }
       ]
-    }
+    },
+    "keybindings":[
+    {
+      "command": "taskManager.addActiveTabToActiveTask",
+      "key": "ctrl+shift+t",
+      "mac": "cmd+shift+t"
+    },
+    {
+      "key": "ctrl+shift+y",
+      "command": "taskManager.addNoteToFileKeyboard",
+      "mac": "cmd+shift+y",
+      "when": "editorTextFocus"
+    }]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
