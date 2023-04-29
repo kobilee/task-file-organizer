@@ -1,9 +1,19 @@
 # Change Log
 
-All notable changes to the "task-file-organizer" extension will be documented in this file.
+[0.0.10] - 2023-04-28
 
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
+Soft lauch with updates based on feedback from intial release
 
-## [Unreleased]
+Added:
+    - keyboard shortcut for primary commands
+    - add notes to files
+    - Generate new color
+
+Fixed
+    - note are dynmic base don file changes
+    - file are in task dynamic based on location
+
+
+[0.0.1] - 2023-04-12
 
 - Initial release

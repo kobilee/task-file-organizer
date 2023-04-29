@@ -97,6 +97,7 @@ class Storage {
   get(key: string): any {
     return this.storage.get(key);
   }
+
 }
 
 export default Storage;

@@ -5,6 +5,7 @@ import {
   TaskManagerProvider,
   Task,
   TaskFile,
+  Note,
   TaskTreeItem,
   ActiveTaskProvider,
   CompletedTaskProvider,
@@ -31,17 +32,17 @@ const progressOptions: vscode.ProgressOptions = {
 
 function modulesPath(context: vscode.ExtensionContext): vscode.Uri {
   return vscode.Uri.joinPath(context.globalStorageUri, "modules");
-}
+};
 
 export function generateUniqueId() {
   return (
     new Date().getTime().toString(36) + Math.random().toString(36).substr(2, 5)
   );
-}
+};
 
 export function generateRandomColor(): string {
   return "#" + Math.floor(Math.random() * 16777215).toString(16);
-}
+};
 
 async function createTask(taskManagerProvider: TaskManagerProvider) {
   const taskName = await vscode.window.showInputBox({
@@ -52,12 +53,13 @@ async function createTask(taskManagerProvider: TaskManagerProvider) {
       id: generateUniqueId(),
       name: taskName,
       isComplete: false,
+      isActive: true,
       files: [],
       color: generateRandomColor(),
     };
     taskManagerProvider.addTask(newTask);
   }
-}
+};
 
 function unsetColorLoop(task: Task, context: vscode.ExtensionContext, storage: Storage) {
   const tabs = storage.get("tabs") || {};
@@ -67,7 +69,7 @@ function unsetColorLoop(task: Task, context: vscode.ExtensionContext, storage: S
       unsetColor(context, file.filePath.replace(/\\/g, "\\\\"));
     }
   }
-}
+};
 
 async function removeTask(
   taskManagerProvider: TaskManagerProvider,
@@ -78,7 +80,7 @@ async function removeTask(
   unsetColorLoop(task, context, storage);
   storage.removeTab(task.id)
   taskManagerProvider.removeTask(task);
-}
+};
 
 async function toggleTaskCompletion(
   taskManagerProvider: TaskManagerProvider,
@@ -86,7 +88,7 @@ async function toggleTaskCompletion(
 ) {
   task.isComplete = !task.isComplete;
   taskManagerProvider.refresh();
-}
+};
 
 async function addFileToTask(
   taskManagerProvider: TaskManagerProvider,
@@ -106,7 +108,7 @@ async function addFileToTask(
     taskManagerProvider.addFileToTask(task, fileUri[0].fsPath);
     setColor(context, task.id, task.color, fileUri[0].fsPath);
   }
-}
+};
 
 async function addActiveFileToTask(taskManagerProvider: TaskManagerProvider, context: vscode.ExtensionContext) {
 	const activeEditor = vscode.window.activeTextEditor;
@@ -143,7 +145,78 @@ async function addActiveFileToTask(taskManagerProvider: TaskManagerProvider, con
 	} else {
 	  vscode.window.showErrorMessage('Task not found.');
 	}
-}
+};
+
+async function addActiveTabToActiveTaskKeyboard(taskManagerProvider: TaskManagerProvider, context: vscode.ExtensionContext) {
+  const editor = vscode.window.activeTextEditor;
+  if (!editor) {
+    vscode.window.showErrorMessage("No active editor found.");
+    return;
+  }
+
+  const filePath = editor.document.uri.fsPath;
+
+  // Get the active task
+  const activeTask = taskManagerProvider.getActiveTask();
+  if (!activeTask) {
+    vscode.window.showErrorMessage("No active task found.");
+    return;
+  }
+
+  const fileExistsInTask = activeTask.files.some(
+    (file) => file.filePath === filePath
+  );
+
+  if (fileExistsInTask) {
+    vscode.window.showErrorMessage(`The file is already in the task "${activeTask.name}".`);
+    return;
+  }
+
+  // Add the file to the active task
+  taskManagerProvider.addFileToTask(activeTask, filePath);
+  setColor(context, activeTask.id, activeTask.color, filePath);
+  vscode.window.showInformationMessage(
+    `Added active tab to the active task: ${activeTask.name}`
+  );
+};
+
+async function addNoteToFileKeyboard(taskManagerProvider: TaskManagerProvider, taskTreeItem: TaskTreeItem, context: vscode.ExtensionContext) {
+  const editor = vscode.window.activeTextEditor;
+  if (!editor) {
+    vscode.window.showErrorMessage("No active editor found.");
+    return;
+  }
+
+  const filePath = editor.document.uri.fsPath;
+
+  // Get the active task
+  const activeTask = taskManagerProvider.getActiveTask();
+  if (!activeTask) {
+    vscode.window.showErrorMessage("No active task found.");
+    return;
+  }
+
+  const file = activeTask.files.find(
+    (file) => file.filePath === filePath
+  );
+
+  if (!file) {
+    vscode.window.showErrorMessage(`The file not in active task "${activeTask.name}".`);
+    return;
+  }
+
+    const note = await vscode.window.showInputBox({
+      prompt: "Enter note content",
+      placeHolder: "Note content",
+    });
+
+    if (note) {
+      taskManagerProvider.addNoteToFile(activeTask.id, file, note);
+    }
+  vscode.window.showInformationMessage(
+    `Added note to the active task: ${activeTask.name}`
+  );
+};
 
 async function addActiveFileToTaskcontext(taskManagerProvider: TaskManagerProvider, task: Task, context: vscode.ExtensionContext) {
   const activeEditor = vscode.window.activeTextEditor;
@@ -163,7 +236,7 @@ async function addActiveFileToTaskcontext(taskManagerProvider: TaskManagerProvid
 
   taskManagerProvider.addFileToTask(task, activeFilePath);
   setColor(context, task.id, task.color, activeFilePath);
-}
+};
 
 async function removeFileFromTask(
   taskManagerProvider: TaskManagerProvider,
@@ -173,36 +246,114 @@ async function removeFileFromTask(
 ) {
   const file = JSON.parse(taskTreeItem.fileJSON) as TaskFile;
   if (typeof taskTreeItem.id === "string") {
-    const taskId = taskTreeItem.id.split("|")[0];
+    const id = taskTreeItem.id.split("|")
+    const taskId = id[0];
     taskManagerProvider.removeFileFromTask(taskId, file);
     const tabs = storage.get("tabs") || {}
-    if (tabs[taskId].includes(taskTreeItem.id.split("|")[1].replace(/\\/g, "\\\\"))) {
-      unsetColor(context, taskTreeItem.id.split("|")[1].replace(/\\/g, "\\\\"));
+    if (tabs[taskId].includes(id[1].replace(/\\/g, "\\\\"))) {
+      unsetColor(context, id[1].replace(/\\/g, "\\\\"));
     }
   } else {
     // Handle the case where taskTreeItem.id is undefined, if necessary
     console.error("taskTreeItem.id is undefined");
   }
-}
+};
+
+async function  addNoteToFileCommand(
+  taskManagerProvider: TaskManagerProvider,
+  taskTreeItem: TaskTreeItem
+) {
+    if (typeof taskTreeItem.id === "string") {
+      const taskId =  taskTreeItem.id.split("|")[0];
+      const file = JSON.parse(taskTreeItem.fileJSON) as TaskFile;
+
+      const note = await vscode.window.showInputBox({
+        prompt: "Enter note content",
+        placeHolder: "Note content",
+      });
+  
+      if (note) {
+        taskManagerProvider.addNoteToFile(taskId, file, note);
+      }
+    }
+};
+
+async function  removeNoteFromFileCommand(
+  taskManagerProvider: TaskManagerProvider,
+  taskTreeItem: TaskTreeItem,
+  context: vscode.ExtensionContext,
+  storage: Storage
+) {
+    if (typeof taskTreeItem.id === "string") {
+      const note = JSON.parse(taskTreeItem.noteJSON) as string;
+      const id = taskTreeItem.id.split("|")
+      const taskId = id[0];
+      const fileId = id[1];
+      taskManagerProvider.removeNoteFromFile(taskId, fileId, note);
+  
+
+    }
+};
 
 async function openTaskFile(filePath: string) {
   const fileUri = vscode.Uri.file(filePath);
   const document = await vscode.workspace.openTextDocument(fileUri);
   await vscode.window.showTextDocument(document, { preview: false });
-}
+};
 
 async function activateTask(task: Task, context: vscode.ExtensionContext) {
   for (let i = 0; i < task.files.length; i++) {
     const file = task.files[i];
     setColor(context, task.id, task.color, file.filePath);
   }
-}
+};
+
+async function openAllFilesInTaskKeyboard(taskManagerProvider: TaskManagerProvider,) {
+    // Get the active task
+    const activeTask = taskManagerProvider.getActiveTask();
+    if (!activeTask) {
+      vscode.window.showErrorMessage("No active task found.");
+      return;
+    }
+
+  for (const taskFile of activeTask.files) {
+    await openTaskFile(taskFile.filePath);
+  }
+};
+
+async function closeAllFilesInTaskKeyboard(taskManagerProvider: TaskManagerProvider,) {
+    // Get the active task
+    const activeTask = taskManagerProvider.getActiveTask();
+    if (!activeTask) {
+      vscode.window.showErrorMessage("No active task found.");
+      return;
+    }
+
+  const filesToClose = activeTask.files.map((file) => vscode.Uri.file(file.filePath));
+
+  for (const file of filesToClose) {
+    const document = vscode.workspace.textDocuments.find(
+      (doc) => doc.uri.fsPath === file.fsPath
+    );
+
+    if (document) {
+      console.log(`Closing file: ${file.fsPath}`);
+      await vscode.window.showTextDocument(document, {
+        preview: false,
+        preserveFocus: true,
+      });
+      await vscode.commands.executeCommand(
+        "workbench.action.closeActiveEditor"
+      );
+    }
+  }
+};
 
 async function openAllFilesInTask(task: Task) {
   for (const taskFile of task.files) {
     await openTaskFile(taskFile.filePath);
   }
-}
+};
 
 async function closeAllFilesInTask(task: Task) {
   const filesToClose = task.files.map((file) => vscode.Uri.file(file.filePath));
@@ -223,6 +374,26 @@ async function closeAllFilesInTask(task: Task) {
       );
     }
   }
+};
+
+async function closeAllFilesNotInTasks(tasks: Task[]) {
+  // Get a list of all files in tasks
+  const taskFiles = tasks.reduce<string[]>((allFiles, task) => {
+    return allFiles.concat(task.files.map((file) => file.filePath));
+  }, []);
+
+  // Iterate through open text documents
+  for (const document of vscode.workspace.textDocuments) {
+    // Check if the document is not in any task
+    if (!taskFiles.includes(document.uri.fsPath)) {
+      console.log(`Closing file not in tasks: ${document.uri.fsPath}`);
+      await vscode.window.showTextDocument(document, {
+        preview: false,
+        preserveFocus: true,
+      });
+      await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+    }
+  }
 }
 
 function isTabInTask(tab: vscode.Tab, task: Task): boolean {
@@ -237,7 +408,7 @@ function isTabInTask(tab: vscode.Tab, task: Task): boolean {
     }
   }
   return false;
-}
+};
 
 function sortTabGroupEditors(
   tabGroups: readonly vscode.TabGroup[],
@@ -256,7 +427,7 @@ function sortTabGroupEditors(
           : collator.compare(formatPath(a.uri.path), formatPath(b.uri.path))
       );
   });
-}
+};
 
 async function sortAllOpenedEditors(tabGroups: readonly vscode.TabGroup[], task: Task) {
 	const sortedEditors = sortTabGroupEditors(tabGroups, task);
@@ -290,7 +461,7 @@ async function sortAllOpenedEditors(tabGroups: readonly vscode.TabGroup[], task:
             vscode.window.showErrorMessage(error.message ?? 'Unknown Exception');
         }
     }
-}
+};
 
 async function completeTask(
   taskManagerProvider: TaskManagerProvider,
@@ -304,19 +475,147 @@ async function completeTask(
   taskManagerProvider.updateTaskToComplete(task.id);
   completedTaskProvider.refresh()
   activeTaskProvider.refresh()
-}
-
+};
 
 function promptRestart() {
   vscode.window.showInformationMessage(
     `Restart VS Code (not just reload) in order for tabscolor changes to take effect.`
   );
-}
+};
 
 function promptRestartAfterUpdate() {
   vscode.window.showInformationMessage(
     `VS Code files change detected. Restart VS Code (not just reload) in order for tabscolor to work.`
   );
+};
+
+async function activateAllOpenTabs() {
+  const editors = vscode.window.visibleTextEditors;
+  for (const editor of editors) {
+    await vscode.window.showTextDocument(editor.document, { viewColumn: editor.viewColumn, preserveFocus: false });
+  }
+}
+
+async function handleFileMove(event: vscode.FileRenameEvent, storage: Storage, context: vscode.ExtensionContext) {
+  for (const { oldUri, newUri } of event.files) {
+    const oldPath = oldUri.fsPath;
+    const newPath = newUri.fsPath;
+    const workspaceFolder = vscode.workspace.getWorkspaceFolder(newUri);
+    if (!workspaceFolder) {
+      continue;
+    }
+
+    const workspacePath = workspaceFolder.uri.fsPath;
+    const tasks = storage.get(`tasks-${workspacePath}`) || [];
+
+    let tasksUpdated = false;
+    for (const task of tasks) {
+      for (const file of task.files) {
+
+        if (file.filePath === oldPath) {
+          file.filePath = newPath;
+          for (const note of file.notes) {
+            note.fileName = newPath
+          }
+          unsetColor(context, oldPath.replace(/\\/g, "\\\\"));
+          setColor(context, task.id, task.color, file.filePath)
+
+
+          tasksUpdated = true;
+       }
+     }
+    }
+
+    if (tasksUpdated) {
+      storage.set(`tasks-${workspacePath}`, tasks);
+    }
+  }
+}
+
+function handleTextDocumentChange(
+  event: vscode.TextDocumentChangeEvent,
+  storage: Storage,
+  taskManagerProvider: TaskManagerProvider,
+) {
+  const document = event.document;
+  const filePath = document.uri.fsPath;
+  const changes = event.contentChanges;
+
+  // Retrieve tasks from storage
+  const tasks = taskManagerProvider.tasks;
+
+  let hasNotes = false;
+
+
+  // Check the number of new lines added and removed
+  for (const change of changes) {
+    const addedLines = change.text.split('\n').length - 1;
+    const removedLines = change.range.end.line - change.range.start.line;
+    const netChange = addedLines - removedLines;
+
+    if (netChange !== 0) {
+      for (const task of tasks) {
+        for (const file of task.files) {
+          if (file.filePath === filePath) {
+            hasNotes = true;
+            updateNotesForLineChanges(filePath, change.range.start.line, netChange, file.notes);
+          }
+        }
+      }
+    }
+  }
+
+  if (hasNotes) {
+    taskManagerProvider.updateTask(tasks);
+  }
+}
+
+function updateNotesForLineChanges(filePath: string, startingLine: number, lineChange: number, notes: Note[]) {
+  for (const note of notes) {
+    if (note.fileName === filePath) {
+      if (note.fileLine > startingLine) {
+        note.fileLine += lineChange;
+        note.positionStart.line = note.fileLine
+        note.positionEnd.line = note.fileLine
+      }
+    }
+  }
+}
+
+async function onNewFileOpened(
+  taskManagerProvider: TaskManagerProvider,
+  context: vscode.ExtensionContext
+) {
+  const config = vscode.workspace.getConfiguration("taskFileOrganizer");
+  const openFileBehavior = config.get<string>("openFileBehavior") || "doNothing";
+
+  if (openFileBehavior === "addToActiveTask") {
+    await addActiveTabToActiveTaskKeyboard(taskManagerProvider, context);
+  } else if (openFileBehavior === "promptForTask") {
+    await addActiveFileToTask(taskManagerProvider, context);
+  }
+}
+
+let autoCloseInterval: NodeJS.Timeout | null = null;
+
+function startAutoCloseFilesNotInTasks(tasks: Task[]): void {
+  const config = vscode.workspace.getConfiguration('taskFileOrganizer');
+
+  // Clear the existing interval if it exists
+  if (autoCloseInterval) {
+    clearInterval(autoCloseInterval);
+    autoCloseInterval = null;
+  }
+
+  // Check if the auto close feature is enabled
+  if (config.get('enableAutoClose')) {
+    const interval = config.get<number>('closeFilesInterval') || 60000;
+
+    // Start a new interval
+    autoCloseInterval = setInterval(async () => {
+      await closeAllFilesNotInTasks(tasks);
+    }, interval);
+  }
 }
 
 export function activate(context: vscode.ExtensionContext) {
@@ -456,7 +755,11 @@ export function activate(context: vscode.ExtensionContext) {
   const taskManagerProvider = new TaskManagerProvider(context, storage);
   const activeTaskProvider = new ActiveTaskProvider(context, storage);
   const completedTaskProvider = new CompletedTaskProvider(context, storage, taskManagerProvider, activeTaskProvider);
+  startAutoCloseFilesNotInTasks(taskManagerProvider.tasks);
+  activateAllOpenTabs();
   context.subscriptions.push(
+
+
 
     vscode.window.registerTreeDataProvider(
       "taskManagerView",
@@ -467,57 +770,95 @@ export function activate(context: vscode.ExtensionContext) {
       "completedTasks",
       completedTaskProvider
     ),
+    vscode.window.onDidChangeActiveTextEditor(async (editor) => {
+      if (editor) {
+        const filePath = editor.document.uri.fsPath;
+        const task = taskManagerProvider.getTaskByFilePath(filePath);
+
+        if (task) {
+          taskManagerProvider.setTaskAsActive(task);
+        }
+      }
+    }),
+    vscode.workspace.onDidChangeTextDocument((event) => handleTextDocumentChange(event, storage, taskManagerProvider)),
+    vscode.workspace.onDidRenameFiles((event) => handleFileMove(event, storage, context)),
+    vscode.window.onDidChangeActiveTextEditor(async () => {
+      await onNewFileOpened(taskManagerProvider, context);
+      }),
+    vscode.workspace.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration('taskFileOrganizer.enableAutoClose') || e.affectsConfiguration('taskFileOrganizer.closeFilesInterval')) {
+        startAutoCloseFilesNotInTasks(taskManagerProvider.tasks);
+      }
+    }),
+    vscode.commands.registerCommand('taskManager.openNote', (file: TaskFile, noteId: string) => {
+        taskManagerProvider.openNote(file, noteId);
+      }
+    ),
     vscode.commands.registerCommand('taskManager.renameTask', async (taskTreeItem: TaskTreeItem) => {
       taskManagerProvider.renameTask(taskTreeItem.task)
     }),
     vscode.commands.registerCommand("taskManager.createTask", () =>
       createTask(taskManagerProvider)
     ),
-	vscode.commands.registerCommand('taskManager.addActiveFileToTask', async () => {
-		await addActiveFileToTask(taskManagerProvider, context);
+	  vscode.commands.registerCommand('taskManager.addActiveFileToTask', async () => {
+		  await addActiveFileToTask(taskManagerProvider, context);
 	  }),
-      vscode.commands.registerCommand('taskManager.addAndCommitFiles', async (taskTreeItem: TaskTreeItem) => {
-        await taskManagerProvider.addAndCommitFiles(taskTreeItem.task);
-      }),
+    vscode.commands.registerCommand(
+      "taskManager.addActiveTabToActiveTask", () => {
+        addActiveTabToActiveTaskKeyboard(taskManagerProvider, context)
+    }),
+    vscode.commands.registerCommand('taskManager.addAndCommitFiles', async (taskTreeItem: TaskTreeItem) => {
+      await taskManagerProvider.addAndCommitFiles(taskTreeItem.task);
+    }),
     vscode.commands.registerCommand('taskManager.addActiveFileToTaskcontext', async (taskTreeItem: TaskTreeItem) => {
       await addActiveFileToTaskcontext(taskManagerProvider, taskTreeItem.task,  context);
-      }),
-
+    }),
+    vscode.commands.registerCommand("taskManager.generateNewRandomColorAndUpdateSvg", (taskTreeItem: TaskTreeItem) => {
+      const newColor =  generateRandomColor()
+      taskManagerProvider.updateTaskColor(taskTreeItem.task, newColor);
+    }),
     vscode.commands.registerCommand(
-      "taskManager.removeTask",
-      (taskTreeItem: TaskTreeItem) =>
+      "taskManager.removeTask", (taskTreeItem: TaskTreeItem) =>
         removeTask(taskManagerProvider, taskTreeItem.task, context, storage)
     ),
     vscode.commands.registerCommand(
-      "taskManager.toggleTaskCompletion",
-      (task: Task) => toggleTaskCompletion(taskManagerProvider, task)
+      "taskManager.toggleTaskCompletion", (task: Task) => 
+        toggleTaskCompletion(taskManagerProvider, task)
     ),
     vscode.commands.registerCommand(
-      "taskManager.addFileToTask",
-      (taskTreeItem: TaskTreeItem) =>
+      "taskManager.addFileToTask", (taskTreeItem: TaskTreeItem) =>
         addFileToTask(taskManagerProvider, taskTreeItem.task, context)
     ),
     vscode.commands.registerCommand(
-      "taskManager.removeFileFromTask",
-      (taskTreeItem: TaskTreeItem) =>
+      "taskManager.addNoteToFile", (taskTreeItem: TaskTreeItem) =>
+        addNoteToFileCommand(taskManagerProvider, taskTreeItem)
+    ),
+    vscode.commands.registerCommand(
+      "taskManager.addNoteToFileKeyboard", (taskTreeItem: TaskTreeItem) =>
+        addNoteToFileKeyboard(taskManagerProvider, taskTreeItem, context)
+    ),
+    vscode.commands.registerCommand(
+      "taskManager.removeNoteFromFileCommand", (taskTreeItem: TaskTreeItem) =>
+        removeNoteFromFileCommand(taskManagerProvider, taskTreeItem, context, storage)
+    ),
+    vscode.commands.registerCommand(
+      "taskManager.removeFileFromTask", (taskTreeItem: TaskTreeItem) =>
         removeFileFromTask(taskManagerProvider, taskTreeItem, context, storage)
     ),
     vscode.commands.registerCommand(
-      "taskManager.completeTask",
-      async (taskTreeItem: TaskTreeItem) => {
+      "taskManager.completeTask", async (taskTreeItem: TaskTreeItem) => {
         completeTask(taskManagerProvider, completedTaskProvider, activeTaskProvider, taskTreeItem.task, context, storage)
 	  }
     ),
     vscode.commands.registerCommand(
-      "taskManager.uncompleteTask",
-      async (taskTreeItem: TaskTreeItem) => {
+      "taskManager.uncompleteTask", async (taskTreeItem: TaskTreeItem) => {
         activateTask(taskTreeItem.task, context);
         completedTaskProvider.uncompleteTask(taskTreeItem.task);
       }
     ),
     vscode.commands.registerCommand(
-      "taskManager.activateTask",
-      async (taskTreeItem: TaskTreeItem) => {
+      "taskManager.activateTask", async (taskTreeItem: TaskTreeItem) => {
+        taskManagerProvider.setTaskAsActive(taskTreeItem.task)
         activateTask(taskTreeItem.task, context);
         await sortAllOpenedEditors(
           vscode.window.tabGroups.all,
@@ -526,8 +867,8 @@ export function activate(context: vscode.ExtensionContext) {
       }
     ),
     vscode.commands.registerCommand(
-      "taskManager.openTaskFile",
-      (filePath: string) => openTaskFile(filePath)
+      "taskManager.openTaskFile",(filePath: string) => 
+        openTaskFile(filePath)
     ),
     vscode.commands.registerCommand(
       "taskManager.sortAllOpenedEditors",
@@ -550,16 +891,32 @@ export function activate(context: vscode.ExtensionContext) {
         await closeAllFilesInTask(task);
       }
     ),
-
+    vscode.commands.registerCommand(
+      "taskManager.openAllFilesInTaskKeyboard",
+      async () => {
+        await openAllFilesInTaskKeyboard(taskManagerProvider);
+      }
+    ),
+    vscode.commands.registerCommand(
+      "taskManager.closeAllFilesInTaskKeyboard",
+      async () => {
+        await closeAllFilesInTaskKeyboard(taskManagerProvider);
+      }
+    ),
+    vscode.commands.registerCommand(
+      "taskManager.closeAllFilesNotInTasks",
+      async () => {
+        await closeAllFilesNotInTasks(taskManagerProvider.tasks);
+      }
+    ),
     vscode.commands.registerCommand("tabscolor.debugColors", function () {
-      // Display the stored tabs colors in console
       console.log(storage.get("tabs"));
     }),
     vscode.commands.registerCommand("tabscolor.resetTabs", function () {
       console.log(storage.clearTabColor());
     })
   );
-}
+};
 
 export async function deactivate(context: vscode.ExtensionContext) {
 	let bootstrapPath = '';
