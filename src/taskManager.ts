@@ -3,6 +3,7 @@ import { generateUniqueId } from "./extension";
 import { setColor } from "./color_tab";
 import Storage from "./storage";
 import * as cp from 'child_process';
+import * as path from "path";
 
 export interface Task {
   id: string;
@@ -58,7 +59,7 @@ export class TaskTreeItem extends vscode.TreeItem {
       type === "task"
         ? task.name
         :  type === "file"
-        ? vscode.workspace.asRelativePath(taskFile!.filePath)
+        ? path.basename(taskFile!.filePath)
         : note!.text
     );
     this.id = type === "task" 
@@ -89,6 +90,9 @@ export class TaskTreeItem extends vscode.TreeItem {
         arguments: [task],
       };
     } else if (type === "file" && taskFile) {
+      const relativePath = vscode.workspace.asRelativePath(taskFile.filePath);
+      const dirPath = vscode.workspace.asRelativePath(path.dirname(taskFile.filePath));
+      this.description = relativePath === path.basename(taskFile.filePath) ? "" : dirPath;
       this.command = {
         command: "taskManager.openTaskFile",
         title: "Open Task File",
@@ -283,7 +287,6 @@ export class TaskManagerProvider
         const note = file.notes[noteindex];
         const fileName = note.fileName;
         const fileLine = note.fileLine;
-        console.log(fileLine ,note.positionEnd.line, note.positionEnd)
 
         if (fileName.length <= 0) {
             return;
