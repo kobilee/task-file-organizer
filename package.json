@@ -2,8 +2,8 @@
   "publisher": "JakobiLee",
   "name": "file-organizer",
   "displayName": "Colored Task Manager",
-  "description": "",
-  "version": "0.1.9",
+  "description": "Boost your productivity with an all-in-one, color-coded solution to organize tasks, files, and notes efficiently. Seamlessly manage tasks, associate files, add notes, and control your workflow. Perfect for anyone seeking a clutter-free coding experience.",
+  "version": "0.1.10",
   "icon": "assests/icon.png",
   "repository": {
     "type": "git",

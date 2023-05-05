@@ -54,6 +54,7 @@ async function createTask(taskManagerProvider: TaskManagerProvider) {
       name: taskName,
       isComplete: false,
       isActive: true,
+      subtasks: [],
       files: [],
       color: generateRandomColor(),
     };

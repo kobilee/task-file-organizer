@@ -11,6 +11,15 @@ export interface Task {
   isComplete: boolean;
   isActive: boolean;
   files: TaskFile[];
+  subtasks: SubTask[];
+  color: string;
+}
+
+export interface SubTask {
+  id: string;
+  name: string;
+  isActive: boolean;
+  files: TaskFile[];
   color: string;
 }
 
@@ -43,6 +52,51 @@ export function generateColoredCircleSvg(color: string, radius: number): string 
     </svg>`;
 }
 
+interface RGB {
+  r: number;
+  g: number;
+  b: number;
+}
+
+function hexToRGB(hex: string): RGB {
+  const bigint = parseInt(hex.slice(1), 16);
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
+  return { r, g, b };
+}
+
+function RGBToHex(r: number, g: number, b: number): string {
+  return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}
+
+function modifyColorComponent(value: number, offset: number): number {
+  const newValue = value + offset;
+  return newValue < 0 ? 0 : newValue > 255 ? 255 : newValue;
+}
+
+function generateOffsetColor(hexColor: string, offset: number): string {
+  const { r, g, b } = hexToRGB(hexColor);
+  const newR = modifyColorComponent(r, offset);
+  const newG = modifyColorComponent(g, offset);
+  const newB = modifyColorComponent(b, offset);
+  return RGBToHex(newR, newG, newB);
+}
+
+function getOffset(task: Task, storage: Storage): number {
+  const offsets = storage.get("subtask")
+  let offset = offsets[task.id]
+  if (offset < 0) {
+    offset *= -1 
+  } else {
+    offset = -(offset + 25)
+  }
+  return offset
+}
+
+const OFFSET = 25; // Adjust this value to control the color offset
+
+
 export class TaskTreeItem extends vscode.TreeItem {
   public taskJSON: string;
   public fileJSON: string;
@@ -51,24 +105,31 @@ export class TaskTreeItem extends vscode.TreeItem {
   constructor(
     public readonly context: vscode.ExtensionContext,
     public readonly task: Task,
+    public readonly subtask: SubTask | null,
     public readonly taskFile: TaskFile | null,
     public readonly note: Note | null,
-    public readonly type: "task" | "file" | "note"
+    public readonly type: "task" | "subtask" | "file" | "note"
   ) {
     super(
       type === "task"
         ? task.name
+        :  type === "subtask"
+        ?  subtask!.name
         :  type === "file"
         ? path.basename(taskFile!.filePath)
         : note!.text
     );
     this.id = type === "task" 
     ? task.id 
+    : type === "subtask" 
+    ? subtask!.id 
     : type === "file" 
     ? `${task.id}|${taskFile!.filePath}`
     : `${task.id}|${taskFile!.filePath}|${generateUniqueId()}`;
     this.collapsibleState =
-    type === "task"
+      type === "task"
+      ? vscode.TreeItemCollapsibleState.Collapsed
+      : type === "subtask"
       ? vscode.TreeItemCollapsibleState.Collapsed
       : type === "file"
       ? vscode.TreeItemCollapsibleState.Collapsed
@@ -89,6 +150,12 @@ export class TaskTreeItem extends vscode.TreeItem {
         title: "Open All Files in Task",
         arguments: [task],
       };
+    } else if (type === "subtask") {
+
+        const svgString = generateColoredCircleSvg(subtask!.color, subtask!.isActive ? 12 : 6);
+        this.iconPath = vscode.Uri.parse(
+          `data:image/svg+xml;base64,${Buffer.from(svgString).toString("base64")}`
+        );
     } else if (type === "file" && taskFile) {
       const relativePath = vscode.workspace.asRelativePath(taskFile.filePath);
       const dirPath = vscode.workspace.asRelativePath(path.dirname(taskFile.filePath));
@@ -248,6 +315,31 @@ export class TaskManagerProvider
     }
   };
 
+  addSubtaskToTask(task: Task, subtask: string): void {
+    const tasks = this.tasks;
+    const taskIndex = tasks.findIndex((t) => t.id === task.id);
+    if (taskIndex !== -1) {
+      const offset = getOffset(task, this.storage)
+      const newColor = generateOffsetColor(task.color, offset);
+      tasks[taskIndex].subtasks.push({ id: generateUniqueId(), name: subtask, isActive: false, files: [], color: newColor});
+      const workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri?.fsPath;
+      this.storage.set(`tasks-${workspacePath}`, tasks);
+      this.refresh();
+    }
+  };
+
+  addFileToSubTask(task: Task, filePath: string): void {
+    const tasks = this.tasks;
+    const taskIndex = tasks.findIndex((t) => t.id === task.id);
+    if (taskIndex !== -1) {
+      tasks[taskIndex].files.push({ id: generateUniqueId(), filePath, notes: []});
+      const workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri?.fsPath;
+      this.storage.set(`tasks-${workspacePath}`, tasks);
+      this.refresh();
+    }
+  };
+
+
   createNote = (label: string) => {
     const nextId = generateUniqueId()
 
@@ -395,11 +487,17 @@ export class TaskManagerProvider
       if (element.type === "task") {
         const task = this.tasks.find((t) => t.id === element.task.id) || null;
         if (task) {
-          return Promise.resolve(
-            task.files.map(
-              (file) => new TaskTreeItem(this.context, task, file, null, "file")
-            )
-          );
+          if (task) {
+            const fileItems = task.files.map(
+              (file) => new TaskTreeItem(this.context, task, null, file, null, "file")
+            );
+        
+            const subtaskItems = task.subtasks.map(
+              (subtask) => new TaskTreeItem(this.context, task, subtask, null, null, "subtask")
+            );
+        
+            return Promise.resolve([...fileItems, ...subtaskItems]);
+          }
         }
       } else if (element.type === "file") {
           const task = this.tasks.find((t) => t.id === element.task.id) || null;
@@ -408,7 +506,7 @@ export class TaskManagerProvider
             if (file) {
               return Promise.resolve(
                 file.notes.map(
-                  (note) => new TaskTreeItem(this.context, task, file, note, "note")
+                  (note) => new TaskTreeItem(this.context, task, null, file, note, "note")
               )
             );
           }
@@ -418,7 +516,7 @@ export class TaskManagerProvider
       return Promise.resolve(
         this.tasks
           .filter((task) => !task.isComplete)
-          .map((task) => new TaskTreeItem(this.context, task, null, null, "task"))
+          .map((task) => new TaskTreeItem(this.context, task, null, null, null, "task"))
       );
     }
     return Promise.resolve([]);
@@ -445,7 +543,7 @@ export class ActiveTaskProvider extends TaskManagerProvider {
       return Promise.resolve(
         this.tasks
           .filter((task) => !task.isComplete)
-          .map((task) => new TaskTreeItem(this.context, task, null, null, "task"))
+          .map((task) => new TaskTreeItem(this.context, task, null, null, null, "task"))
       );
     }
     return Promise.resolve([]);
@@ -473,7 +571,7 @@ export class CompletedTaskProvider extends TaskManagerProvider {
       return Promise.resolve(
         this.tasks
           .filter((task) => task.isComplete)
-          .map((task) => new TaskTreeItem(this.context, task, null, null, "task"))
+          .map((task) => new TaskTreeItem(this.context, task, null, null, null, "task"))
       );
     }
     return Promise.resolve([]);
