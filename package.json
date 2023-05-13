@@ -158,10 +158,19 @@
       {
         "command": "taskManager.addActiveTabToActiveTask",
         "title": "Add Active Tab to Active Task"
+      },
+      {
+        "command": "taskManager.addSubTaskToTask",
+        "title": "Add Subtask"
       }
+      
     ],
     "menus": {
       "commandPalette": [
+        {
+          "command": "taskManager.addSubTaskToTask",
+          "when": "false"
+        },
         {
           "command": "taskManager.generateNewRandomColorAndUpdateSvg",
           "when": "false"
@@ -267,6 +276,11 @@
           "command": "taskManager.closeAllFilesNotInTasks",
           "when": "view == taskManagerView && viewItem == task",
           "group": "1_openCloseFiles"
+        },
+        {
+          "command": "taskManager.addSubTaskToTask",
+          "when": "view == taskManagerView && viewItem == task",
+          "group": "2_addRemoveTask"
         },
         {
           "command": "taskManager.createTask",

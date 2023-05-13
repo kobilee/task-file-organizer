@@ -478,6 +478,20 @@ async function completeTask(
   activeTaskProvider.refresh()
 };
 
+async function  addSubTaskToTask(
+  taskManagerProvider: TaskManagerProvider,
+  task: Task
+) {
+    const subtask = await vscode.window.showInputBox({
+      prompt: "Enter Subtask",
+      placeHolder: "Subtask",
+    });
+
+    if (subtask) {
+      taskManagerProvider.addSubtaskToTask(task, subtask);
+    }
+};
+
 function promptRestart() {
   vscode.window.showInformationMessage(
     `Restart VS Code (not just reload) in order for tabscolor changes to take effect.`
@@ -813,6 +827,9 @@ export function activate(context: vscode.ExtensionContext) {
     }),
     vscode.commands.registerCommand('taskManager.addActiveFileToTaskcontext', async (taskTreeItem: TaskTreeItem) => {
       await addActiveFileToTaskcontext(taskManagerProvider, taskTreeItem.task,  context);
+    }),
+    vscode.commands.registerCommand('taskManager.addSubTaskToTask', async (taskTreeItem: TaskTreeItem) => {
+      await addSubTaskToTask(taskManagerProvider, taskTreeItem.task);
     }),
     vscode.commands.registerCommand("taskManager.generateNewRandomColorAndUpdateSvg", (taskTreeItem: TaskTreeItem) => {
       const newColor =  generateRandomColor()

@@ -86,6 +86,7 @@ function generateOffsetColor(hexColor: string, offset: number): string {
 function getOffset(task: Task, storage: Storage): number {
   const offsets = storage.get("subtask")
   let offset = offsets[task.id]
+  console.log(offsets)
   if (offset < 0) {
     offset *= -1 
   } else {
@@ -268,10 +269,21 @@ export class TaskManagerProvider
 
   addTask(task: Task): void {
     const tasks = this.tasks;
+    let offsets = this.storage.get("subtask");
     tasks.forEach((t) => (t.isActive = false));
     task.isActive = true;
     const workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri?.fsPath;
     this.storage.add(`tasks-${workspacePath}`, task);
+    // If offsets is undefined, initialize it as an empty object
+    if (!offsets) {
+        offsets = {};
+    }
+
+    offsets[task.id] = 0;
+    console.log(offsets)
+    this.storage.add("subtask", offsets);
+
+
     this.refresh();
   };
 
@@ -319,9 +331,13 @@ export class TaskManagerProvider
     const tasks = this.tasks;
     const taskIndex = tasks.findIndex((t) => t.id === task.id);
     if (taskIndex !== -1) {
+
       const offset = getOffset(task, this.storage)
+      console.log(offset)
+
       const newColor = generateOffsetColor(task.color, offset);
       tasks[taskIndex].subtasks.push({ id: generateUniqueId(), name: subtask, isActive: false, files: [], color: newColor});
+
       const workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri?.fsPath;
       this.storage.set(`tasks-${workspacePath}`, tasks);
       this.refresh();
@@ -482,33 +498,31 @@ export class TaskManagerProvider
     return element;
   };
 
+
   getChildren(element?: TaskTreeItem): Thenable<TaskTreeItem[]> {
     if (element) {
       if (element.type === "task") {
-        const task = this.tasks.find((t) => t.id === element.task.id) || null;
+        const task = this.tasks.find((t) => t.id === element.task.id);
         if (task) {
-          if (task) {
-            const fileItems = task.files.map(
-              (file) => new TaskTreeItem(this.context, task, null, file, null, "file")
-            );
-        
-            const subtaskItems = task.subtasks.map(
-              (subtask) => new TaskTreeItem(this.context, task, subtask, null, null, "subtask")
-            );
-        
-            return Promise.resolve([...fileItems, ...subtaskItems]);
-          }
+          const fileItems = task.files
+            ? task.files.map((file) => new TaskTreeItem(this.context, task, null, file, null, "file"))
+            : [];
+          const subtaskItems = task.subtasks
+            ? task.subtasks.map((subtask) => new TaskTreeItem(this.context, task, subtask, null, null, "subtask"))
+            : [];
+          console.log(subtaskItems)
+  
+          return Promise.resolve([...fileItems, ...subtaskItems]);
         }
       } else if (element.type === "file") {
-          const task = this.tasks.find((t) => t.id === element.task.id) || null;
-          if (task) {
-            const file = task.files.find((f) => f.id === element.taskFile!.id) || null;
-            if (file) {
-              return Promise.resolve(
-                file.notes.map(
-                  (note) => new TaskTreeItem(this.context, task, null, file, note, "note")
-              )
-            );
+        const task = this.tasks.find((t) => t.id === element.task.id);
+        if (task) {
+          const file = task.files.find((f) => f.id === element.taskFile!.id);
+          if (file) {
+            const noteItems = file.notes
+              ? file.notes.map((note) => new TaskTreeItem(this.context, task, null, file, note, "note"))
+              : [];
+            return Promise.resolve(noteItems);
           }
         }
       }
@@ -521,7 +535,6 @@ export class TaskManagerProvider
     }
     return Promise.resolve([]);
   };
-  
   
 
   refresh(): void {
