@@ -3,7 +3,7 @@
   "name": "file-organizer",
   "displayName": "Colored Task Manager",
   "description": "",
-  "version": "0.1.9",
+  "version": "0.1.12",
   "icon": "assests/icon.png",
   "repository": {
     "type": "git",

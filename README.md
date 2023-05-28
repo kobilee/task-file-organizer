@@ -91,15 +91,16 @@ After installing the extension, you may see a message saying "Your Code installa
 This extention has not been tested on Linux but is not expected to work.
 
 Subtask is early Beta, Generating a new color for task with subtasks will not always work and is discouraged 
+Any tasks created before 0.1.11 will not be able to use subtasks
 
 ## TODO
 
--Color picker
--Sort Tabs based on subtask
--Remove Explandible attribute from complete and active views
+- Color picker
+- Sort Tabs based on subtask
+- Remove Explandible attribute from complete and active views
 
 ## Release Notes
 
 This is a beta, please report any bug you find!
 
-### 0.1.11
+### 0.1.12
