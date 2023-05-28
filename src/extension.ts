@@ -6,6 +6,7 @@ import {
   Task,
   TaskFile,
   Note,
+  SubTask,
   TaskTreeItem,
   ActiveTaskProvider,
   CompletedTaskProvider,
@@ -15,7 +16,7 @@ import Core from "./core";
 import * as path from "path";
 import * as os from "os";
 import * as fs from "fs";
-import { generateCssFile, reloadCss, setColor, unsetColor } from "./color_tab";
+import { generateCssFile, reloadCss, setColor, unsetColor, addColor} from "./color_tab";
 let storage_: any = null;
 
 const collator = new Intl.Collator(undefined, {
@@ -44,7 +45,7 @@ export function generateRandomColor(): string {
   return "#" + Math.floor(Math.random() * 16777215).toString(16);
 };
 
-async function createTask(taskManagerProvider: TaskManagerProvider) {
+async function createTask(taskManagerProvider: TaskManagerProvider, context: vscode.ExtensionContext) {
   const taskName = await vscode.window.showInputBox({
     prompt: "Enter the task name",
   });
@@ -55,19 +56,19 @@ async function createTask(taskManagerProvider: TaskManagerProvider) {
       isComplete: false,
       isActive: true,
       files: [],
+      subtasks: [],
       color: generateRandomColor(),
     };
     taskManagerProvider.addTask(newTask);
+    addColor(context, newTask.id, newTask.color, "Task")
   }
 };
 
 function unsetColorLoop(task: Task, context: vscode.ExtensionContext, storage: Storage) {
-  const tabs = storage.get("tabs") || {};
   for (let i = 0; i < task.files.length; i++) {
     const file = task.files[i];
-    if (tabs[task.id].includes(file.filePath.replace(/\\/g, "\\\\"))){
-      unsetColor(context, file.filePath.replace(/\\/g, "\\\\"));
-    }
+    unsetColor(context, file.filePath.replace(/\\/g, "\\\\"));
+    
   }
 };
 
@@ -77,9 +78,9 @@ async function removeTask(
   context: vscode.ExtensionContext, 
   storage: Storage
 ) {
+  taskManagerProvider.removeTask(task);
   unsetColorLoop(task, context, storage);
   storage.removeTab(task.id)
-  taskManagerProvider.removeTask(task);
 };
 
 async function toggleTaskCompletion(
@@ -106,7 +107,7 @@ async function addFileToTask(
   const fileUri = await vscode.window.showOpenDialog(options);
   if (fileUri && fileUri[0]) {
     taskManagerProvider.addFileToTask(task, fileUri[0].fsPath);
-    setColor(context, task.id, task.color, fileUri[0].fsPath);
+    setColor(context, task.id, fileUri[0].fsPath);
   }
 };
 
@@ -141,7 +142,7 @@ async function addActiveFileToTask(taskManagerProvider: TaskManagerProvider, con
       return;
     }
 		taskManagerProvider.addFileToTask(task, activeFilePath)
-		setColor(context, task.id, task.color, activeFilePath);
+		setColor(context, task.id, activeFilePath);
 	} else {
 	  vscode.window.showErrorMessage('Task not found.');
 	}
@@ -174,7 +175,7 @@ async function addActiveTabToActiveTaskKeyboard(taskManagerProvider: TaskManager
 
   // Add the file to the active task
   taskManagerProvider.addFileToTask(activeTask, filePath);
-  setColor(context, activeTask.id, activeTask.color, filePath);
+  setColor(context, activeTask.id, filePath);
   vscode.window.showInformationMessage(
     `Added active tab to the active task: ${activeTask.name}`
   );
@@ -235,7 +236,7 @@ async function addActiveFileToTaskcontext(taskManagerProvider: TaskManagerProvid
   }
 
   taskManagerProvider.addFileToTask(task, activeFilePath);
-  setColor(context, task.id, task.color, activeFilePath);
+  setColor(context, task.id, activeFilePath);
 };
 
 async function removeFileFromTask(
@@ -278,6 +279,100 @@ async function  addNoteToFileCommand(
     }
 };
 
+async function  addSubtaskToFile(
+  taskManagerProvider: TaskManagerProvider,
+  taskTreeItem: TaskTreeItem,
+  context: vscode.ExtensionContext
+) {
+    if (typeof taskTreeItem.id === "string") {
+      const taskId =  taskTreeItem.id.split("|")[0];
+      const file = JSON.parse(taskTreeItem.fileJSON) as TaskFile;
+      const tasks = taskManagerProvider.tasks;
+      const taskIndex = tasks.findIndex((t) => t.id === taskId);
+      
+      if (taskIndex === -1 || !tasks[taskIndex].subtasks) {
+        vscode.window.showErrorMessage('No subtasks available. Please add a subtask first.');
+        return;
+      }
+      
+      const pickedSubTask = await vscode.window.showQuickPick(
+        tasks[taskIndex].subtasks.map((subtask: SubTask) => subtask.name), 
+        { placeHolder: 'Select a Subtask to add the file to' }
+      );
+  
+      if (pickedSubTask) {
+        taskManagerProvider.addFileSubtask(taskId, file, pickedSubTask, context);
+      }
+    }
+};
+async function  removeFileFromSubtask(
+  taskManagerProvider: TaskManagerProvider,
+  taskTreeItem: TaskTreeItem,
+  context: vscode.ExtensionContext
+) {
+    if (typeof taskTreeItem.id === "string") {
+      const taskId =  taskTreeItem.id.split("|")[0];
+      const file = JSON.parse(taskTreeItem.fileJSON) as TaskFile;
+      const tasks = taskManagerProvider.tasks;
+      const taskIndex = tasks.findIndex((t) => t.id === taskId);
+      
+      if (taskIndex === -1 || !file.subtask) {
+        vscode.window.showErrorMessage('No subtasks asigned. Please add a subtask first.');
+        return;
+      }
+      
+      taskManagerProvider.removeFileFromSubtask(taskId, file, file.subtask, context);
+    }
+};
+
+
+async function  addSubtaskToTask(
+  taskManagerProvider: TaskManagerProvider,
+  task: Task,
+  context: vscode.ExtensionContext
+) {
+    const subtask = await vscode.window.showInputBox({
+      prompt: "Enter Subtask",
+      placeHolder: "Subtask",
+    });
+
+    if (subtask) {
+        const isDuplicate = task.subtasks.some((existingSubtask) => existingSubtask.name.toLowerCase() === subtask.toLowerCase());
+        if (isDuplicate) {
+          vscode.window.showErrorMessage("Duplicate subtask. Please enter a unique subtask.");
+          return;
+        }
+      taskManagerProvider.addSubtasktoTask(task, subtask, context);
+    }
+};
+
+async function  removeSubtaskFromTask(
+  taskManagerProvider: TaskManagerProvider,
+  task: Task,
+  context: vscode.ExtensionContext
+) {
+
+    const tasks = taskManagerProvider.tasks;
+    const taskIndex = tasks.findIndex((t) => t.id === task.id);
+    
+    if (taskIndex === -1 || !tasks[taskIndex].subtasks) {
+      vscode.window.showErrorMessage('No subtasks available. Please add a subtask first.');
+      return;
+    }
+    
+    const removeSubTask = await vscode.window.showQuickPick(
+      tasks[taskIndex].subtasks.map((subtask: SubTask) => subtask.name), 
+      { placeHolder: 'Select a Subtask to remove' }
+    );
+
+    if (removeSubTask) {
+      taskManagerProvider.removeSubtaskFromTask(task, removeSubTask, context);
+      vscode.window.showInformationMessage(`The subtask "${removeSubTask}" was successfully removed from the task.`);
+    }
+};
+
+
+
 async function  removeNoteFromFileCommand(
   taskManagerProvider: TaskManagerProvider,
   taskTreeItem: TaskTreeItem,
@@ -304,7 +399,7 @@ async function openTaskFile(filePath: string) {
 async function activateTask(task: Task, context: vscode.ExtensionContext) {
   for (let i = 0; i < task.files.length; i++) {
     const file = task.files[i];
-    setColor(context, task.id, task.color, file.filePath);
+    setColor(context, task.id, file.filePath);
   }
 };
 
@@ -471,8 +566,8 @@ async function completeTask(
   context: vscode.ExtensionContext,
   storage: Storage
 ) {
-  unsetColorLoop(task, context, storage);
   taskManagerProvider.updateTaskToComplete(task.id);
+  unsetColorLoop(task, context, storage);
   completedTaskProvider.refresh()
   activeTaskProvider.refresh()
 };
@@ -518,7 +613,7 @@ async function handleFileMove(event: vscode.FileRenameEvent, storage: Storage, c
             note.fileName = newPath
           }
           unsetColor(context, oldPath.replace(/\\/g, "\\\\"));
-          setColor(context, task.id, task.color, file.filePath)
+          setColor(context, task.id, file.filePath)
 
 
           tasksUpdated = true;
@@ -794,11 +889,27 @@ export function activate(context: vscode.ExtensionContext) {
         taskManagerProvider.openNote(file, noteId);
       }
     ),
+    vscode.commands.registerCommand('taskManager.addSubtaskToFile', (taskTreeItem: TaskTreeItem) => {
+      addSubtaskToFile(taskManagerProvider, taskTreeItem, context);
+     }
+    ),   
+      vscode.commands.registerCommand('taskManager.removeFileFromSubtask', (taskTreeItem: TaskTreeItem) => {
+        removeFileFromSubtask(taskManagerProvider, taskTreeItem, context);
+     }
+    ),
+    vscode.commands.registerCommand('taskManager.addSubtaskToTask', (taskTreeItem: TaskTreeItem) => {
+      addSubtaskToTask(taskManagerProvider, taskTreeItem.task, context);
+     }
+    ),
+    vscode.commands.registerCommand('taskManager.removeSubtaskFromTask', (taskTreeItem: TaskTreeItem) => {
+      removeSubtaskFromTask(taskManagerProvider, taskTreeItem.task, context);
+     }
+    ),
     vscode.commands.registerCommand('taskManager.renameTask', async (taskTreeItem: TaskTreeItem) => {
       taskManagerProvider.renameTask(taskTreeItem.task)
     }),
     vscode.commands.registerCommand("taskManager.createTask", () =>
-      createTask(taskManagerProvider)
+      createTask(taskManagerProvider, context)
     ),
 	  vscode.commands.registerCommand('taskManager.addActiveFileToTask', async () => {
 		  await addActiveFileToTask(taskManagerProvider, context);
@@ -813,10 +924,23 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('taskManager.addActiveFileToTaskcontext', async (taskTreeItem: TaskTreeItem) => {
       await addActiveFileToTaskcontext(taskManagerProvider, taskTreeItem.task,  context);
     }),
-    vscode.commands.registerCommand("taskManager.generateNewRandomColorAndUpdateSvg", (taskTreeItem: TaskTreeItem) => {
-      const newColor =  generateRandomColor()
-      taskManagerProvider.updateTaskColor(taskTreeItem.task, newColor);
+    vscode.commands.registerCommand("taskManager.generateNewRandomColorAndUpdateSvg", async (taskTreeItem: TaskTreeItem) => {
+      const task = taskTreeItem.task;
+      if (task.subtasks && task.subtasks.length > 0) {
+        const option = await vscode.window.showWarningMessage(
+          "This task has subtasks. Generating a new color while a task has a subtask is discouraged as the subtask feature is currently in beta. Are you sure you want to do this?",
+          "Yes", "No"
+        );
+        if (option === "Yes") {
+          const newColor = generateRandomColor();
+          taskManagerProvider.updateTaskColor(task, newColor);
+        } 
+      } else {
+        const newColor = generateRandomColor();
+        taskManagerProvider.updateTaskColor(task, newColor);
+      }
     }),
+    
     vscode.commands.registerCommand(
       "taskManager.removeTask", (taskTreeItem: TaskTreeItem) =>
         removeTask(taskManagerProvider, taskTreeItem.task, context, storage)
@@ -852,8 +976,9 @@ export function activate(context: vscode.ExtensionContext) {
     ),
     vscode.commands.registerCommand(
       "taskManager.uncompleteTask", async (taskTreeItem: TaskTreeItem) => {
-        activateTask(taskTreeItem.task, context);
         completedTaskProvider.uncompleteTask(taskTreeItem.task);
+        activateTask(taskTreeItem.task, context);
+
       }
     ),
     vscode.commands.registerCommand(

@@ -3,6 +3,7 @@ import * as vscode from "vscode";
 interface ColorInfo {
   background: string;
   color: string;
+  type: string;
 }
 
 interface CustomColor {
@@ -77,12 +78,31 @@ class Storage {
   addCustomColor(color: CustomColor) {
     const colors = this.get("customColors") || {};
     const colorName = Object.keys(color)[0];
+    const colorType = color[colorName].type;
+
     colors[colorName] = {
-      background: color[colorName].background,
-      color: color[colorName].color,
+      ...colors[colorName],  // This line will preserve existing properties
+      [color[colorName].type] : {
+        background: color[colorName].background,
+        color: color[colorName].color
+      }
     };
+  
     this.set("customColors", colors);
   }
+
+  updateCustomColor(color: CustomColor) {
+    const colors = this.get("customColors") || {};
+    const colorName = Object.keys(color)[0];
+    for (let task of colors[colorName]) {
+      if ( task.type === color.type){
+        task.background = color[colorName].background;
+        task.color = color[colorName].color;
+      }
+    this.set("customColors", colors);
+    }
+  }
+
 
   removeTab(tab: string): void {
     const tabs = this.get("tabs") || {};

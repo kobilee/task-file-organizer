@@ -86,7 +86,6 @@ class Core {
   }
 
   write(): void {
-    console.log(this.fileContent);
     fs.writeFileSync(this.file, this.fileContent);
     this.initialContent = this.fileContent;
   }

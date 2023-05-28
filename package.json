@@ -23,7 +23,7 @@
         {
           "id": "taskManager",
           "title": "Task Manager",
-          "icon": "resources/icon.svg"
+          "icon": "resources/dark/icon.svg"
         }
       ]
     },
@@ -53,56 +53,59 @@
       {
         "command": "taskManager.createTask",
         "title": "Create Task",
-        "category": "Task Manager"
+        "category": "Task Manager",
+        "icon": {
+          "dark": "resources/dark/create.svg",
+          "light": "resources/light/create.svg"
+        }
       },
       {
         "command": "taskManager.addActiveFileToTask",
-        "title": "Add Current File to Task"     
+        "title": "Add Current File to Task"
       },
       {
         "command": "taskManager.addActiveFileToTaskcontext",
-        "title": "Add active File to Task"      
+        "title": "Add active File to Task"
       },
       {
         "command": "taskManager.toggleTaskCompletion",
-        "title": "Toggle Task Completion"      
+        "title": "Toggle Task Completion"
       },
       {
         "command": "taskManager.addFileToTask",
-        "title": "Add File to Task"      
+        "title": "Add File to Task"
       },
       {
         "command": "taskManager.openTaskFile",
-        "title": "Open Task File"      
+        "title": "Open Task File"
       },
       {
         "command": "taskManager.openAllFilesInTask",
-        "title": "Open All Files in Task"      
+        "title": "Open All Files in Task"
       },
       {
         "command": "taskManager.closeAllFilesInTask",
-        "title": "Close All Files in Task"      
+        "title": "Close All Files in Task"
       },
       {
         "command": "taskManager.openAllFilesInTaskKeyboard",
-        "title": "Open All Files in Task shortcut"      
+        "title": "Open All Files in Task shortcut"
       },
       {
         "command": "taskManager.closeAllFilesInTaskKeyboard",
-        "title": "Close All Files in Task shortcut"      
+        "title": "Close All Files in Task shortcut"
       },
       {
         "command": "taskManager.closeAllFilesNotInTasks",
-        "title": "Close All Files Not in a Task"      
+        "title": "Close All Files Not in a Task"
       },
-
       {
         "command": "taskManager.sortAllOpenedEditors",
-        "title": "Sort All Files in Task"      
+        "title": "Sort All Files in Task"
       },
       {
         "command": "taskManager.addAndCommitFiles",
-        "title": "Add and Commit Files in Task"      
+        "title": "Add and Commit Files in Task"
       },
       {
         "command": "tabscolor.debugColors",
@@ -113,55 +116,110 @@
         "command": "tabscolor.resetTabs",
         "title": "Reset",
         "category": "Task Manager"
-      
       },
       {
         "command": "taskManager.removeFileFromTask",
-        "title": "Remove File from Task"      
+        "title": "Remove File from Task",
+        "icon": {
+          "dark": "resources/dark/remove.svg",
+          "light": "resources/light/remove.svg"
+        }
       },
       {
         "command": "taskManager.addNoteToFile",
-        "title": "Add Note"      
+        "title": "Add Note"
       },
       {
         "command": "taskManager.addNoteToFileKeyboard",
-        "title": "Add Note shortcut"      
+        "title": "Add Note shortcut"
       },
       {
         "command": "taskManager.removeNoteFromFileCommand",
-        "title": "Remove Note"      
+        "title": "Remove Note",
+        "icon": {
+          "dark": "resources/dark/remove.svg",
+          "light": "resources/light/remove.svg"
+        }
       },
       {
         "command": "taskManager.removeTask",
-        "title": "Remove Task"      
+        "title": "Remove Task",
+        "icon": {
+          "dark": "resources/dark/remove.svg",
+          "light": "resources/light/remove.svg"
+        }
       },
       {
         "command": "taskManager.activateTask",
-        "title": "Activate Task"      
+        "title": "Activate Task"
       },
       {
         "command": "taskManager.completeTask",
-        "title": "Complete Task"      
+        "title": "Complete Task"
       },
       {
         "command": "taskManager.uncompleteTask",
-        "title": "Uncomplete Task"      
+        "title": "Uncomplete Task"
       },
       {
         "command": "taskManager.renameTask",
-        "title": "Rename Task"
+        "title": "Rename"
       },
       {
         "command": "taskManager.generateNewRandomColorAndUpdateSvg",
-        "title": "Generate New Random Color"
+        "title": "Generate New Random Color",
+        "icon": {
+          "dark": "resources/dark/random.svg",
+          "light": "resources/light/random.svg"
+        }
       },
       {
         "command": "taskManager.addActiveTabToActiveTask",
         "title": "Add Active Tab to Active Task"
+      },
+      {
+        "command": "taskManager.addSubtaskToFile",
+        "title": "Add File to Subtask",
+        "icon": {
+          "dark": "resources/dark/add.svg",
+          "light": "resources/light/add.svg"
+        }
+      },
+      {
+        "command": "taskManager.removeFileFromSubtask",
+        "title": "Remove Subtask from File",
+        "icon": {
+          "dark": "resources/dark/remove_subtask.svg",
+          "light": "resources/light/remove_subtask.svg"
+        }
+      },
+      {
+        "command": "taskManager.addSubtaskToTask",
+        "title": "Add Subtask to Task"
+      },
+      {
+        "command": "taskManager.removeSubtaskFromTask",
+        "title": "Remove Subtask"
       }
     ],
     "menus": {
       "commandPalette": [
+        {
+          "command": "taskManager.removeSubtaskFromTask",
+          "when": "false"
+        },
+        {
+          "command": "taskManager.addSubtaskToTask",
+          "when": "false"
+        },
+        {
+          "command": "taskManager.addSubtaskToFile",
+          "when": "false"
+        },
+        {
+          "command": "taskManager.removeFileFromSubtask",
+          "when": "false"
+        },
         {
           "command": "taskManager.generateNewRandomColorAndUpdateSvg",
           "when": "false"
@@ -195,13 +253,13 @@
           "when": "false"
         },
         {
-          "command": "taskManager.openAllFilesInTaskKeyboard ",
+          "command": "taskManager.openAllFilesInTaskKeyboard",
           "when": "false"
         },
         {
-          "command": "taskManager.closeAllFilesInTaskKeyboard ",
+          "command": "taskManager.closeAllFilesInTaskKeyboard",
           "when": "false"
-        },      
+        },
         {
           "command": "taskManager.closeAllFilesNotInTasks",
           "when": "false"
@@ -262,38 +320,32 @@
           "command": "taskManager.closeAllFilesInTask",
           "when": "view == taskManagerView && viewItem == task",
           "group": "1_openCloseFiles"
-        },       
-         {
+        },
+        {
           "command": "taskManager.closeAllFilesNotInTasks",
           "when": "view == taskManagerView && viewItem == task",
           "group": "1_openCloseFiles"
         },
         {
-          "command": "taskManager.createTask",
-          "when": "view == taskManagerView && viewItem == task",
-          "group": "2_addRemoveTask"
-        },
-        {
           "command": "taskManager.removeTask",
           "when": "view == taskManagerView && viewItem == task",
-          "group": "2_addRemoveTask"
+          "group": "inline@3"
         },
         {
           "command": "taskManager.renameTask",
           "when": "view == taskManagerView && viewItem == task",
-          "group": "2_addRemoveTask"
+          "group": "inline@1"
         },
         {
           "command": "taskManager.generateNewRandomColorAndUpdateSvg",
           "when": "view == taskManagerView && viewItem == task",
-          "group": "2_addRemoveTask"
+          "group": "inline@2"
         },
         {
           "command": "taskManager.addFileToTask",
           "when": "view == taskManagerView && viewItem == task",
           "group": "3_addRemoveFile"
         },
-        
         {
           "command": "taskManager.addActiveFileToTaskcontext",
           "when": "view == taskManagerView && viewItem == task",
@@ -302,7 +354,7 @@
         {
           "command": "taskManager.removeFileFromTask",
           "when": "view == taskManagerView && viewItem == file",
-          "group": "3_addRemoveFile"
+          "group": "inline@3"
         },
         {
           "command": "taskManager.addNoteToFile",
@@ -310,9 +362,29 @@
           "group": "3_addRemoveFile"
         },
         {
+          "command": "taskManager.addSubtaskToFile",
+          "when": "view == taskManagerView && viewItem == file",
+          "group": "inline@2"
+        },
+        {
+          "command": "taskManager.removeFileFromSubtask",
+          "when": "view == taskManagerView && viewItem == file",
+          "group": "inline@1"
+        },
+        {
+          "command": "taskManager.addSubtaskToTask",
+          "when": "view == taskManagerView && viewItem == task",
+          "group": "2_addRemoveTask"
+        },
+        {
+          "command": "taskManager.removeSubtaskFromTask",
+          "when": "view == taskManagerView && viewItem == task",
+          "group": "2_addRemoveTask"
+        },
+        {
           "command": "taskManager.removeNoteFromFileCommand",
           "when": "view == taskManagerView && viewItem == note",
-          "group": "3_addRemoveNote"
+          "group": "inline"
         },
         {
           "command": "taskManager.completeTask",
@@ -349,30 +421,31 @@
         }
       ]
     },
-    "keybindings":[
-    {
-      "command": "taskManager.addActiveTabToActiveTask",
-      "key": "ctrl+shift+t",
-      "mac": "cmd+shift+t"
-    },
-    {
-      "command": "taskManager.addNoteToFileKeyboard",
-      "key": "ctrl+shift+y",
-      "mac": "cmd+shift+y",
-      "when": "editorTextFocus"
-    },
-    {
-      "command": "taskManager.openAllFilesInTaskKeyboard",
-      "key": "ctrl+shift+a", 
-      "mac": "cmd+shift+a",
-      "when": "editorTextFocus"
-    },
-    {
-      "command": "taskManager.closeAllFilesInTaskKeyboard",
-      "key": "ctrl+shift+c", 
-      "mac": "cmd+shift+c",
-      "when": "editorTextFocus"
-    }],
+    "keybindings": [
+      {
+        "command": "taskManager.addActiveTabToActiveTask",
+        "key": "ctrl+alt+t",
+        "mac": "cmd+alt+t"
+      },
+      {
+        "command": "taskManager.addNoteToFileKeyboard",
+        "key": "ctrl+alt+y",
+        "mac": "cmd+alt+y",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "taskManager.openAllFilesInTaskKeyboard",
+        "key": "ctrl+alt+a",
+        "mac": "cmd+alt+a",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "taskManager.closeAllFilesInTaskKeyboard",
+        "key": "ctrl+alt+c",
+        "mac": "cmd+alt+c",
+        "when": "editorTextFocus"
+      }
+    ],
     "configuration": {
       "type": "object",
       "title": "Task File Organizer Configuration",
@@ -390,7 +463,11 @@
         },
         "taskFileOrganizer.openFileBehavior": {
           "type": "string",
-          "enum": ["addToActiveTask", "promptForTask", "doNothing"],
+          "enum": [
+            "addToActiveTask",
+            "promptForTask",
+            "doNothing"
+          ],
           "default": "doNothing",
           "description": "Specify the behavior when opening a new file: add to active task, prompt for a task, or do nothing."
         }
@@ -406,6 +483,7 @@
     "test": "node ./out/test/runTest.js"
   },
   "devDependencies": {
+    "@types/chroma-js": "^2.4.0",
     "@types/glob": "^8.1.0",
     "@types/mocha": "^10.0.1",
     "@types/node": "16.x",
@@ -419,6 +497,7 @@
     "typescript": "^4.9.5"
   },
   "dependencies": {
+    "chroma-js": "^2.4.2",
     "sudo-prompt": "^9.2.1"
   }
 }

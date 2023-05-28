@@ -1,9 +1,10 @@
 import * as vscode from "vscode";
 import { generateUniqueId } from "./extension";
-import { setColor } from "./color_tab";
+import { addColor, setColor,updateColor } from "./color_tab";
 import Storage from "./storage";
 import * as cp from 'child_process';
 import * as path from "path";
+import * as chroma from 'chroma-js';
 
 export interface Task {
   id: string;
@@ -11,6 +12,7 @@ export interface Task {
   isComplete: boolean;
   isActive: boolean;
   files: TaskFile[];
+  subtasks: SubTask[];
   color: string;
 }
 
@@ -18,6 +20,8 @@ export interface TaskFile {
   id: string;
   filePath: string;
   notes: Note[];
+  color: string;
+  subtask: string;
 }
 
 export interface Position {
@@ -34,6 +38,10 @@ export interface Note {
   codeSnippet: string;
   id: string;
 }
+export interface SubTask {
+  name: string;
+  color: string
+}
 
 
 export function generateColoredCircleSvg(color: string, radius: number): string {
@@ -42,6 +50,9 @@ export function generateColoredCircleSvg(color: string, radius: number): string 
       <circle cx="12" cy="12" r="${radius}"/>
     </svg>`;
 }
+
+const isValidHexColor = (color: string) => /^#([0-9A-Fa-f]{3}){1,2}$/.test(color);
+
 
 export class TaskTreeItem extends vscode.TreeItem {
   public taskJSON: string;
@@ -90,9 +101,13 @@ export class TaskTreeItem extends vscode.TreeItem {
         arguments: [task],
       };
     } else if (type === "file" && taskFile) {
+      const svgString = generateColoredCircleSvg(taskFile.color, 16);
+      this.iconPath = vscode.Uri.parse(
+        `data:image/svg+xml;base64,${Buffer.from(svgString).toString("base64")}`
+      );
       const relativePath = vscode.workspace.asRelativePath(taskFile.filePath);
       const dirPath = vscode.workspace.asRelativePath(path.dirname(taskFile.filePath));
-      this.description = relativePath === path.basename(taskFile.filePath) ? "" : dirPath;
+      this.description = taskFile.subtask ? taskFile.subtask : "";
       this.command = {
         command: "taskManager.openTaskFile",
         title: "Open Task File",
@@ -169,20 +184,71 @@ export class TaskManagerProvider
     );
   }
 
-  updateTaskColor(task: Task, newColor: string): void {
-    const tasks = this.tasks;
-    const taskIndex = tasks.findIndex((t) => t.id === task.id);
-    if (taskIndex !== -1) {
-      tasks[taskIndex].color = newColor;
-      const workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri?.fsPath;
-      this.storage.set(`tasks-${workspacePath}`, tasks);
 
-      for (const file of tasks[taskIndex].files) {
-        setColor(this.context, task.id, newColor, file.filePath);
+
+// Updates the color of each subtask.
+async updateSubtaskColors(task: Task, oldColor: string, newColor: string): Promise<void> {
+  for (let subtask of task.subtasks) {
+    let offset = chroma.deltaE(oldColor, subtask.color);
+    let newSubtaskColor;
+    try {
+      newSubtaskColor = chroma(newColor).set('hsl.h', '+'.concat(offset.toString())).hex();
+      // Ensure that the new color is valid.
+      if (!isValidHexColor(newSubtaskColor)) {
+        throw new Error("Invalid color");
       }
-      this.refresh();
+      subtask.color = newSubtaskColor;
+    } catch (error) {
+      // If the color is invalid, use the new task color as a fallback.
+      console.log(`Invalid color: ${newSubtaskColor}. Using the new task color as fallback.`);
+      
+      subtask.color = newColor;
     }
+    updateColor(this.context, task.id, subtask.color, subtask.name)
   }
+}
+
+// Updates the task color and all related colors.
+async updateTaskColor(task: Task, newColor: string): Promise<void> {
+  const tasks = this.tasks;
+  const taskIndex = tasks.findIndex((t) => t.id === task.id);
+  if (taskIndex !== -1) {
+    const oldColor = tasks[taskIndex].color
+    tasks[taskIndex].color = newColor;
+
+    await this.updateSubtaskColors(tasks[taskIndex], oldColor, newColor);
+
+    this.updateFileColors(tasks[taskIndex], newColor, oldColor);
+
+    const workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri?.fsPath;
+    this.storage.set(`tasks-${workspacePath}`, tasks);
+
+    for (const file of tasks[taskIndex].files) {
+      // Do something different if a file has a subtask.
+      if (file.subtask) {
+        updateColor(this.context, task.id, file.color, file.subtask)
+      } else {
+        updateColor(this.context, task.id, newColor, "Task")
+      }
+      setColor(this.context, task.id, file.filePath);
+    }
+    this.refresh();
+  }
+}
+  
+  async updateFileColors(task: Task, newTaskColor: string, oldTaskColor: string): Promise<void> {
+    task.files.forEach(file => {
+      if (file.subtask) {
+        let offset = chroma.deltaE(oldTaskColor, file.color);
+        let newColor = chroma(newTaskColor).set('hsl.h', '+'.concat(offset.toString())).hex();
+  
+        file.color = newColor;
+      } else {
+        file.color = newTaskColor;
+      }
+    });
+  }
+  
   
   async renameTask(task: Task): Promise<void> {
     const newTaskName = await vscode.window.showInputBox({
@@ -241,7 +307,7 @@ export class TaskManagerProvider
     const tasks = this.tasks;
     const taskIndex = tasks.findIndex((t) => t.id === task.id);
     if (taskIndex !== -1) {
-      tasks[taskIndex].files.push({ id: generateUniqueId(), filePath, notes: []});
+      tasks[taskIndex].files.push({ id: generateUniqueId(), filePath, notes: [], color: tasks[taskIndex].color, subtask: ''});
       const workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri?.fsPath;
       this.storage.set(`tasks-${workspacePath}`, tasks);
       this.refresh();
@@ -338,6 +404,12 @@ export class TaskManagerProvider
     );
   };
 
+  getSubTask(task: Task, name: string) {
+    return task.subtasks.findIndex(
+      (subtask) => subtask.name === name
+    );
+  };
+
   getNote(file: TaskFile, id: string) {
     return file.notes.findIndex(
       (note) => note.id === id
@@ -364,6 +436,130 @@ export class TaskManagerProvider
       }
     }
   };
+
+  
+  async addSubtasktoTask(task: Task, subtask: string, context: vscode.ExtensionContext) {
+    const tasks = this.tasks;
+    const taskIndex = tasks.findIndex((t) => t.id === task.id);
+    if (taskIndex !== -1) {
+      let usedLightnesses = tasks[taskIndex].subtasks.map(subtask => chroma(subtask.color).get('hsl.l'));
+  
+      let lightness = chroma(tasks[taskIndex].color).get('hsl.l');
+      let hue: number;
+
+      if (tasks[taskIndex].subtasks.length === 0) {
+        hue = chroma(tasks[taskIndex].color).get('hsl.h');
+      } else {
+        let lastSubtaskColor = tasks[taskIndex].subtasks[tasks[taskIndex].subtasks.length - 1].color;
+        hue = chroma(lastSubtaskColor).get('hsl.h');
+      }
+
+      let adjustment = 0.1; // Base adjustment
+  
+      let maxPosChanges = Math.floor((1 - lightness) / adjustment);
+      let maxNegChanges = Math.floor(lightness / adjustment);
+
+      // Count the number of positive and negative adjustments done so far
+      let posCount = tasks[taskIndex].subtasks.filter(subtask => chroma(subtask.color).get('hsl.l') > lightness).length;
+      let negCount = tasks[taskIndex].subtasks.filter(subtask => chroma(subtask.color).get('hsl.l') < lightness).length;
+      
+      if (tasks[taskIndex].subtasks.length % 2 === 0) {
+        // If there are even number of subtasks (or no subtask), increment lightness
+        adjustment *= (posCount + 1); // Increase the adjustment by the count
+        adjustment = adjustment % maxPosChanges;
+        if (lightness + adjustment > 1) {
+          hue = (hue + (10 * (posCount/ maxPosChanges))) % 360; // change hue by 15 degrees when lightness is at the maximum
+        } else {
+          lightness += adjustment;
+        }
+      } else {
+        // If there are odd number of subtasks, decrement lightness
+        adjustment *= (negCount + 1); // Increase the adjustment by the count
+        adjustment = adjustment % maxNegChanges;
+        if (lightness - adjustment < 0) {
+          hue = (hue + (10 * (negCount/ maxNegChanges))) % 360; // change hue by 15 degrees when lightness is at the maximum
+          // change hue by 15 degrees when lightness is at the minimum
+        } else {
+          lightness -= adjustment;
+        }
+      }
+  
+      // Create new color with adjusted lightness
+      const newColor = chroma(hue, chroma(tasks[taskIndex].color).get('hsl.s'), lightness, 'hsl').hex();
+  
+      tasks[taskIndex].subtasks.push({name: subtask, color: newColor});
+      console.log(newColor, tasks[taskIndex].color)
+      const workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri?.fsPath;
+      addColor(context, task.id, newColor, subtask);
+  
+      this.storage.set(`tasks-${workspacePath}`, tasks);
+    }
+  }
+  
+  
+  
+  
+  async removeSubtaskFromTask(task: Task, subtaskName: string, context: vscode.ExtensionContext) {
+    const tasks = this.tasks;
+    const taskIndex = tasks.findIndex((t) => t.id === task.id);
+    if (taskIndex !== -1) {
+        const subtaskIndex = tasks[taskIndex].subtasks.findIndex(subtask => subtask.name === subtaskName);
+        if (subtaskIndex !== -1) {
+
+          for (let file of tasks[taskIndex].files) {
+            if (file.subtask === subtaskName) {
+                await this.removeFileFromSubtask(task.id, file, subtaskName, context);
+            }
+          }
+
+          tasks[taskIndex].subtasks.splice(subtaskIndex, 1);
+
+            const workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri?.fsPath;
+            this.storage.set(`tasks-${workspacePath}`, tasks);
+            this.refresh();
+        }
+    }
+}
+
+  async addFileSubtask(taskId: string, rfile: TaskFile, subtask: string, context: vscode.ExtensionContext) {
+    const tasks = this.tasks;
+    const taskIndex = tasks.findIndex((t) => t.id === taskId);
+    if (taskIndex !== -1) {
+      const fileIndex = this.getFile(tasks[taskIndex], rfile.filePath);
+      const subtaskIndex = this.getSubTask(tasks[taskIndex], subtask);
+
+      if (fileIndex !== -1 && subtaskIndex !== -1) {
+        tasks[taskIndex].files[fileIndex].color =  tasks[taskIndex].subtasks[subtaskIndex].color;
+        tasks[taskIndex].files[fileIndex].subtask = tasks[taskIndex].subtasks[subtaskIndex].name ;
+
+        const workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri?.fsPath;
+        this.storage.set(`tasks-${workspacePath}`, tasks);
+        setColor(context, taskId, tasks[taskIndex].files[fileIndex].filePath);
+        this.refresh();
+
+      }
+    }
+  };
+
+  async removeFileFromSubtask(taskId: string, rfile: TaskFile, subtask: string, context: vscode.ExtensionContext) {
+    const tasks = this.tasks;
+    const taskIndex = tasks.findIndex((t) => t.id === taskId);
+    if (taskIndex !== -1) {
+      const fileIndex = this.getFile(tasks[taskIndex], rfile.filePath);
+      const subtaskIndex = this.getSubTask(tasks[taskIndex], subtask);
+      if (fileIndex !== -1 && subtaskIndex !== -1) {
+        // Reset file color to task's color and clear subtask association
+        tasks[taskIndex].files[fileIndex].color = tasks[taskIndex].color;
+        tasks[taskIndex].files[fileIndex].subtask = '';
+
+        const workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri?.fsPath;
+        this.storage.set(`tasks-${workspacePath}`, tasks);
+        setColor(context, taskId, tasks[taskIndex].files[fileIndex].filePath);
+        this.refresh();
+      }
+    }
+}
+
 
   async removeNoteFromFile(taskId: string, filePath: string, noteStr: string) {
     const tasks = this.tasks;
@@ -395,21 +591,24 @@ export class TaskManagerProvider
       if (element.type === "task") {
         const task = this.tasks.find((t) => t.id === element.task.id) || null;
         if (task) {
+          const sortedFiles = task.files
+            .slice()
+            .sort((a, b) => {
+              const aSubtask = a.subtask || '';
+              const bSubtask = b.subtask || '';
+              return aSubtask.localeCompare(bSubtask);
+            });
           return Promise.resolve(
-            task.files.map(
-              (file) => new TaskTreeItem(this.context, task, file, null, "file")
-            )
+            sortedFiles.map((file) => new TaskTreeItem(this.context, task, file, null, "file"))
           );
         }
       } else if (element.type === "file") {
-          const task = this.tasks.find((t) => t.id === element.task.id) || null;
-          if (task) {
-            const file = task.files.find((f) => f.id === element.taskFile!.id) || null;
-            if (file) {
-              return Promise.resolve(
-                file.notes.map(
-                  (note) => new TaskTreeItem(this.context, task, file, note, "note")
-              )
+        const task = this.tasks.find((t) => t.id === element.task.id) || null;
+        if (task) {
+          const file = task.files.find((f) => f.id === element.taskFile!.id) || null;
+          if (file) {
+            return Promise.resolve(
+              file.notes.map((note) => new TaskTreeItem(this.context, task, file, note, "note"))
             );
           }
         }
@@ -423,6 +622,8 @@ export class TaskManagerProvider
     }
     return Promise.resolve([]);
   };
+  
+  
   
   
 
