@@ -185,7 +185,6 @@ export class TaskManagerProvider
   }
 
 
-
 // Updates the color of each subtask.
 async updateSubtaskColors(task: Task, oldColor: string, newColor: string): Promise<void> {
   for (let subtask of task.subtasks) {

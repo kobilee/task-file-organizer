@@ -47,37 +47,41 @@ After installing the extension, you can access the Task Manager view from the Ac
 3. Use the command palette (`Ctrl+Shift+P` or `Cmd+Shift+P` on Mac) to access the extension's commands( all other Task Manger commands have not been tested to run from the command palette):
    - `Create Task`: Create a new task
 4. The Task Manger Tab will give you access to the reset of the commands:
-   Manipluate Task Files:
+   
+   ### Tasks:
+   - `Rename Task`: Allows you to update the name of a Task,  `Inline`
+   - `Remove Task`: Deletes a Task, `Inline`
+   - `Generate Random Color`: Generates a new random color for a task, `Inline`
+
+   ### Manipluate Task Files:
    - `Close All Files in Task`: Closes all open files in Task, available in the task context menu ```crtl + alt + c```
    - `Close All Files not in Task`: Closes all open files in that are not in a Task, available in the task context menu
    - `Open All Files in Task`: Opens all files in Task, available in the task context menu ```crtl + alt + a```
    - `Sort All Files in Task`: Sorts all open files in Task so they display next to one another, available in the task context menu
+   - `Remove File from task`: Deletes a file from a task, `Inline`
    
-   Subtasks:
+   ### Subtasks:
    - `Add Subtask`: Adds a subtaskto a task, available in the task context menu
    - `Remove Subtask From Task`: Deletes a subtask, available in the task context menu
+   - `Remove File From Subtask`: Removes a file from a subtask, `Inline`
+   - `Add File to Subtask`: Adds a file to a subtask, `Inline`
 
-   Add Files:
+   ### Add Files:
    - `Add File to Task`: Adds a file to a Task, available in the task context menu
    - `Add File to Active Task`: Adds a file to the active Task (Active task is indicated by the larger icon) ```crtl + alt + t ```
+   - `Remove File from task`: Deletes a file from a task, available `Inline` 
 
-   Notes:
+   ### Notes:
    - `Add Note to file`: Adds a Note to the current file, available in the file context menu
    - `Add Note to file in Active Task`: Adds a Note to the current file if it's in the active task, ```crtl + alt + y```
          - Notes save the current highlighted text; clicking on a note will take you to the saved text
+   - `Remove Note`: Deletes a Note, `Inline` 
 
-   Inline:
-   - `Remove Note`: Deletes a Note, available inline 
-   - `Remove File from task`: Deletes a file from a task, available inline 
-   - `Remove Task`: Deletes a Task, available inline 
-   - `Rename Task`: Allows you to update the name of a Task, available in the task context menu
-   - `Remove File From Subtask`: Removes a file from a subtask, available inline 
-   - `Add File to Subtask`: Adds a file to a subtask, available inline 
-
-
+   ### Utils:
    - `Activate Task`: Colors all files in task based on the selected Task and brings all files together, available in the task context menu
    - `Complete Task`: Marks a task as complete; complete tasks are not visible in the task manager tab and can be seen in the "Completed Tasks" explained below, available in the task context menu
    - `Add and commit Files in Task`: Allows you to add and commit any changes to files within
+
 5. The Explorer tab will display two sections: "Active Tasks" and "Completed Tasks".
    - Right-click on a task in either section to access the context menu with options to uncomplete the task.
 6. Click on a task to open all files associated with it.
@@ -86,12 +90,9 @@ After installing the extension, you can access the Task Manager view from the Ac
 
 ## Known Issues
 
-After installing the extension, you may see a message saying "Your Code installation is corrupt..." Click on the gear icon and choose "Don't show again."
-
-This extention has not been tested on Linux but is not expected to work.
-
-Subtask is early Beta, Generating a new color for task with subtasks will not always work and is discouraged 
-Any tasks created before 0.1.11 will not be able to use subtasks
+- After installing the extension, you may see a message saying "Your Code installation is corrupt..." Click on the gear icon and choose "Don't show again."
+- This extention has not been tested on Linux but is not expected to work.
+- Subtask is early Beta, Generating a new color for task with subtasks will not always work and is discouraged 
 
 ## TODO
 
@@ -103,4 +104,4 @@ Any tasks created before 0.1.11 will not be able to use subtasks
 
 This is a beta, please report any bug you find!
 
-### 0.1.12
+### 0.1.14

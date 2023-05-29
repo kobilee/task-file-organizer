@@ -715,6 +715,8 @@ function startAutoCloseFilesNotInTasks(tasks: Task[]): void {
 
 export function activate(context: vscode.ExtensionContext) {
   const storage = new Storage(context);
+
+
   let cssFileLink = path
     .join(modulesPath(context).path, "inject.css")
     .replace(/\\/g, "/");
@@ -840,6 +842,15 @@ export function activate(context: vscode.ExtensionContext) {
   }
 
   if (storage.get("firstActivation")) {
+    const workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri?.fsPath;
+    const tasks = storage.get(`tasks-${workspacePath}`) || [];
+    for (const task of tasks) {
+      if (task.subtasks === undefined) {
+        task.subtasks = [];
+      }
+    }
+    storage.set(`tasks-${workspacePath}`, tasks);
+    generateCssFile(context);
     generateCssFile(context);
     reloadCss();
     storage.set("secondActivation", true);
