@@ -859,6 +859,7 @@ export function activate(context: vscode.ExtensionContext) {
   storage.set("firstActivation", true);
 
   const taskManagerProvider = new TaskManagerProvider(context, storage);
+  taskManagerProvider.fixtasks()
   const activeTaskProvider = new ActiveTaskProvider(context, storage);
   const completedTaskProvider = new CompletedTaskProvider(context, storage, taskManagerProvider, activeTaskProvider);
   startAutoCloseFilesNotInTasks(taskManagerProvider.tasks);
