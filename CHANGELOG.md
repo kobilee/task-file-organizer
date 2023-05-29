@@ -1,5 +1,13 @@
 # Change Log
 
+[0.1.13] - 2023-05-29
+
+Fix subtask bug
+
+Fixed:
+    - bug where having tasks and updating to 0.1.11 broke the extension
+    - Any tasks created before 0.1.11 will now be able to use subtasks
+
 [0.1.11] - 2023-05-28
 
 Added Subtask Beta
@@ -23,9 +31,9 @@ Removed:
         - remove note
 
 
-NOTEs: 
-- Subtask is early Beta, Generating a new color for task with subtasks will nto always work and is discouraged, 
-- Any tasks created before 0.0.11 will not be able to use subtasks
+NOTES: 
+- Subtask is early Beta, Generating a new color for task with subtasks will not always work and is discouraged, 
+- Any tasks created before 0.1.11 will not be able to use subtasks
 
 [0.1.10] - 2023-04-28
 
