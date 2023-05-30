@@ -9,6 +9,7 @@ import * as chroma from 'chroma-js';
 export interface Task {
   id: string;
   name: string;
+  completionDate: Date|null;
   isComplete: boolean;
   isActive: boolean;
   files: TaskFile[];
@@ -95,6 +96,7 @@ export class TaskTreeItem extends vscode.TreeItem {
       this.iconPath = vscode.Uri.parse(
         `data:image/svg+xml;base64,${Buffer.from(svgString).toString("base64")}`
       );
+      this.description = task.isComplete && task.completionDate ? new Date(task.completionDate).toDateString() : "";
       this.command = {
         command: "taskManager.openAllFilesInTask",
         title: "Open All Files in Task",
@@ -494,7 +496,7 @@ async updateTaskColor(task: Task, newColor: string): Promise<void> {
       const newColor = chroma(hue, chroma(tasks[taskIndex].color).get('hsl.s'), lightness, 'hsl').hex();
   
       tasks[taskIndex].subtasks.push({name: subtask, color: newColor});
-      console.log(newColor, tasks[taskIndex].color)
+
       const workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri?.fsPath;
       addColor(context, task.id, newColor, subtask);
   
@@ -679,12 +681,19 @@ export class CompletedTaskProvider extends TaskManagerProvider {
     if (!element) {
       return Promise.resolve(
         this.tasks
-          .filter((task) => task.isComplete)
+          .filter((task) => task.isComplete && task.completionDate !== null)
+          .sort((a, b) => {
+            const dateA = a.completionDate instanceof Date ? a.completionDate : new Date(a.completionDate || '');
+            const dateB = b.completionDate instanceof Date ? b.completionDate : new Date(b.completionDate || '');
+  
+            return dateB.getTime() - dateA.getTime();
+          })
           .map((task) => new TaskTreeItem(this.context, task, null, null, "task"))
       );
     }
     return Promise.resolve([]);
   }
+  
 
   uncompleteTask(task: Task): void {
     const tasks = this.tasks;

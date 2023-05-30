@@ -93,6 +93,7 @@ After installing the extension, you can access the Task Manager view from the Ac
 - After installing the extension, you may see a message saying "Your Code installation is corrupt..." Click on the gear icon and choose "Don't show again."
 - This extention has not been tested on Linux but is not expected to work.
 - Subtask is early Beta, Generating a new color for task with subtasks will not always work and is discouraged 
+- Any Tasks create before 0.1.11 Will need to have a new color generated
 
 ## TODO
 
@@ -104,4 +105,4 @@ After installing the extension, you can access the Task Manager view from the Ac
 
 This is a beta, please report any bug you find!
 
-### 0.1.14
+### 0.2.1

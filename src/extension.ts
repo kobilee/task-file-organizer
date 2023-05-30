@@ -53,6 +53,7 @@ async function createTask(taskManagerProvider: TaskManagerProvider, context: vsc
     const newTask: Task = {
       id: generateUniqueId(),
       name: taskName,
+      completionDate: null,
       isComplete: false,
       isActive: true,
       files: [],
@@ -568,6 +569,21 @@ async function completeTask(
 ) {
   taskManagerProvider.updateTaskToComplete(task.id);
   unsetColorLoop(task, context, storage);
+
+    if (task.completionDate) {
+    const userResponse = await vscode.window.showInformationMessage(
+      `The task has been completed before. Do you want to update it's completion to today's date?`,
+      { modal: true },
+      'Yes', 'No'
+    );
+
+    if (userResponse === 'Yes') {
+      task.completionDate = new Date();
+    }
+  } else {
+    task.completionDate = new Date();
+  }
+
   completedTaskProvider.refresh()
   activeTaskProvider.refresh()
 };
@@ -851,13 +867,12 @@ export function activate(context: vscode.ExtensionContext) {
     }
     storage.set(`tasks-${workspacePath}`, tasks);
     generateCssFile(context);
-    generateCssFile(context);
     reloadCss();
     storage.set("secondActivation", true);
   }
 
   storage.set("firstActivation", true);
-
+  
   const taskManagerProvider = new TaskManagerProvider(context, storage);
   taskManagerProvider.fixtasks()
   const activeTaskProvider = new ActiveTaskProvider(context, storage);
@@ -865,8 +880,6 @@ export function activate(context: vscode.ExtensionContext) {
   startAutoCloseFilesNotInTasks(taskManagerProvider.tasks);
   activateAllOpenTabs();
   context.subscriptions.push(
-
-
 
     vscode.window.registerTreeDataProvider(
       "taskManagerView",

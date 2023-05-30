@@ -1,5 +1,9 @@
 # Change Log
 
+[0.2.1] - 2023-05-30
+
+- soft launch
+
 [0.1.14] - 2023-05-29
 
 Fix subtask bug
