@@ -3,7 +3,7 @@
   "name": "file-organizer",
   "displayName": "Colored Task Manager",
   "description": "",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "icon": "assests/icon.png",
   "repository": {
     "type": "git",
@@ -53,11 +53,7 @@
       {
         "command": "taskManager.createTask",
         "title": "Create Task",
-        "category": "Task Manager",
-        "icon": {
-          "dark": "resources/dark/create.svg",
-          "light": "resources/light/create.svg"
-        }
+        "category": "Task Manager"
       },
       {
         "command": "taskManager.addActiveFileToTask",
@@ -201,6 +197,20 @@
         "command": "taskManager.removeSubtaskFromTask",
         "title": "Remove Subtask"
       }
+      ,
+      {
+        "command": "taskManager.saveAllFilesInTaskKeyboard",
+        "title": "Save All Files"
+      }
+      ,
+      {
+        "command": "taskManager.saveAllFilesInTask",
+        "title": "Save All Files in task",
+        "icon": {
+          "dark": "resources/dark/save.svg",
+          "light": "resources/light/save.svg"
+        }
+      }
     ],
     "menus": {
       "commandPalette": [
@@ -253,7 +263,15 @@
           "when": "false"
         },
         {
+          "command": "taskManager.saveAllFilesInTask",
+          "when": "false"
+        },
+        {
           "command": "taskManager.openAllFilesInTaskKeyboard",
+          "when": "false"
+        },
+        {
+          "command": "taskManager.saveAllFilesInTaskKeyboard",
           "when": "false"
         },
         {
@@ -329,17 +347,22 @@
         {
           "command": "taskManager.removeTask",
           "when": "view == taskManagerView && viewItem == task",
-          "group": "inline@3"
+          "group": "inline@4"
         },
         {
           "command": "taskManager.renameTask",
+          "when": "view == taskManagerView && viewItem == task",
+          "group": "inline@2"
+        },
+        {
+          "command": "taskManager.saveAllFilesInTask",
           "when": "view == taskManagerView && viewItem == task",
           "group": "inline@1"
         },
         {
           "command": "taskManager.generateNewRandomColorAndUpdateSvg",
           "when": "view == taskManagerView && viewItem == task",
-          "group": "inline@2"
+          "group": "inline@3"
         },
         {
           "command": "taskManager.addFileToTask",
@@ -423,32 +446,37 @@
     },
     "keybindings": [
       {
+        "command": "taskManager.saveAllFilesInTaskKeyboard",
+        "key": "ctrl+alt+s",
+        "mac": "cmd+opt+s"
+      },
+      {
         "command": "taskManager.addActiveTabToActiveTask",
         "key": "ctrl+alt+t",
-        "mac": "cmd+alt+t"
+        "mac": "cmd+opt+t"
       },
       {
         "command": "taskManager.addNoteToFileKeyboard",
         "key": "ctrl+alt+y",
-        "mac": "cmd+alt+y",
+        "mac": "cmd+opt+y",
         "when": "editorTextFocus"
       },
       {
         "command": "taskManager.openAllFilesInTaskKeyboard",
         "key": "ctrl+alt+a",
-        "mac": "cmd+alt+a",
+        "mac": "cmd+opt+a",
         "when": "editorTextFocus"
       },
       {
         "command": "taskManager.closeAllFilesInTaskKeyboard",
         "key": "ctrl+alt+c",
-        "mac": "cmd+alt+c",
+        "mac": "cmd+opt+c",
         "when": "editorTextFocus"
       }
     ],
     "configuration": {
       "type": "object",
-      "title": "Task File Organizer Configuration",
+      "title": "Colored Task       Manager Configuration",
       "properties": {
         "taskFileOrganizer.closeFilesInterval": {
           "type": "integer",

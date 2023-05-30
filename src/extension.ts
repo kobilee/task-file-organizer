@@ -123,11 +123,11 @@ async function addActiveFileToTask(taskManagerProvider: TaskManagerProvider, con
 	const activeFilePath = activeEditor.document.uri.fsPath;
   
 	const tasks = taskManagerProvider.tasks;
-	const pickedTask = await vscode.window.showQuickPick(
-	  tasks.map((task: Task) => task.name), 
-	  { placeHolder: 'Select a task to add the active file to' }
-	);
-
+  const activeTasks = tasks.filter((task: Task) => !task.isComplete);
+  const pickedTask = await vscode.window.showQuickPick(
+    activeTasks.map((task: Task) => task.name), 
+    { placeHolder: 'Select a task to add the active file to' }
+  );
   if (!pickedTask) {
 	  return;
 	}
@@ -402,6 +402,34 @@ async function activateTask(task: Task, context: vscode.ExtensionContext) {
     const file = task.files[i];
     setColor(context, task.id, file.filePath);
   }
+};
+
+async function saveAllFilesInTask(task: Task) {
+  // Get all open text documents
+  const openDocuments = vscode.workspace.textDocuments;
+
+  for (const taskFile of task.files) {
+    // Check if this file is currently open
+    const openDocument = openDocuments.find(document => document.fileName === taskFile.filePath);
+
+    if (openDocument) {
+      // If the file is open, save it
+      await openDocument.save();
+    }
+  }
+};
+
+async function saveAllFilesInTaskKeyboard(taskManagerProvider: TaskManagerProvider,) {
+  // Get the active task
+  const activeTask = taskManagerProvider.getActiveTask();
+  if (!activeTask) {
+    vscode.window.showErrorMessage("No active task found.");
+    return;
+  }
+
+
+  await saveAllFilesInTask(activeTask);
+
 };
 
 async function openAllFilesInTaskKeyboard(taskManagerProvider: TaskManagerProvider,) {
@@ -1059,6 +1087,19 @@ export function activate(context: vscode.ExtensionContext) {
         await closeAllFilesNotInTasks(taskManagerProvider.tasks);
       }
     ),
+    vscode.commands.registerCommand(
+      "taskManager.saveAllFilesInTask",
+      async (taskTreeItem: TaskTreeItem) => {
+        await saveAllFilesInTask(taskTreeItem.task);
+      }
+    ),
+    vscode.commands.registerCommand(
+      "taskManager.saveAllFilesInTaskKeyboard",
+      async () => {
+        await saveAllFilesInTaskKeyboard(taskManagerProvider);
+      }
+    ),
+
     vscode.commands.registerCommand("tabscolor.debugColors", function () {
       console.log(storage.get("tabs"));
     }),

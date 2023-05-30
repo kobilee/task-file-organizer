@@ -1,8 +1,14 @@
 # Change Log
 
-[0.2.1] - 2023-05-30
+[0.2.2] - 2023-05-30
 
 - soft launch
+
+Add:
+    - Save all files in task
+
+Fixed:
+    - bug where generating a new color before adding a file to a task would not update the color
 
 [0.1.14] - 2023-05-29
 

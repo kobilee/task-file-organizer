@@ -33,30 +33,43 @@ or
 3. Type `ext install file-organizer` and press `Enter`
 4. Reload Visual Studio Code
 
-NOTE: to use this extention on macOS you must move your vscode install into the application folder
+IMPORTANT: to use this extention on macOS you must move your vscode install into the application folder
 
 ## Usage
 
 After installing the extension, you can access the Task Manager view from the Activity Bar or the Explorer sidebar. You can create tasks, add files to tasks, and manage tasks using the provided commands. The extension will also apply the task color to the associated file tabs in the editor.
 
-1. Reload VS Code after installation.
-2. Configure extension settings:
-   - Go to File > Preferences > Settings (or `Ctrl+,` on Windows/Linux or `Cmd+,` on Mac).
-   - Search for "Task File Organizer" in the search bar.
+1. Close and Open VSCode after installation.
+
+2. (Optional) Configure extension settings:
+   - Go to on Windows/Linux `File > Preferences > Settings` or on macOS `Code > Preferences > Settings` 
+      - (or `Ctrl + ,` on Windows/Linux or `Cmd + ,` on Mac).
+   - Search for "Colored Task Manager" in the search bar.
    - Configure the settings for "Close Files Interval" and "Enable Auto Close" as desired.
-3. Use the command palette (`Ctrl+Shift+P` or `Cmd+Shift+P` on Mac) to access the extension's commands( all other Task Manger commands have not been tested to run from the command palette):
-   - `Create Task`: Create a new task
-4. The Task Manger Tab will give you access to the reset of the commands:
-   
+
+3. (Optional) Use the command palette (`Ctrl+Shift+P` or `Cmd+Shift+P` on Mac) to access the extension's commands:
+   - `Create Task`: s a new task
+
+4. The Task Manger Tab in the activity bar will give you access to the reset of the commands:
+   ### Tab view:
+   - `Create Task`: Creates a new task, button at the top of the tab view. 
+  
    ### Tasks:
    - `Rename Task`: Allows you to update the name of a Task,  `Inline`
    - `Remove Task`: Deletes a Task, `Inline`
    - `Generate Random Color`: Generates a new random color for a task, `Inline`
+   - `Save Files in Task`: Saves all files in a task, `Inline`
+      - pc:  ```crtl + alt + s```
+      - mac: ```cmd  + opt + s``` 
 
    ### Manipluate Task Files:
-   - `Close All Files in Task`: Closes all open files in Task, available in the task context menu ```crtl + alt + c```
+   - `Close All Files in Task`: Closes all open files in Task, available in the task context menu 
+      - pc:  ```crtl + alt + c```
+      - mac: ```cmd  + opt + c``` 
    - `Close All Files not in Task`: Closes all open files in that are not in a Task, available in the task context menu
-   - `Open All Files in Task`: Opens all files in Task, available in the task context menu ```crtl + alt + a```
+   - `Open All Files in Task`: Opens all files in Task, available in the task context menu
+      - pc:  ```crtl + alt + a```
+      - mac: ```cmd  + opt + a``` 
    - `Sort All Files in Task`: Sorts all open files in Task so they display next to one another, available in the task context menu
    - `Remove File from task`: Deletes a file from a task, `Inline`
    
@@ -68,13 +81,17 @@ After installing the extension, you can access the Task Manager view from the Ac
 
    ### Add Files:
    - `Add File to Task`: Adds a file to a Task, available in the task context menu
-   - `Add File to Active Task`: Adds a file to the active Task (Active task is indicated by the larger icon) ```crtl + alt + t ```
+   - `Add File to Active Task`: Adds a file to the active Task (Active task is indicated by the larger icon)
+      - pc:  ```crtl + alt + t```
+      - mac: ```cmd  + opt + t``` 
    - `Remove File from task`: Deletes a file from a task, available `Inline` 
 
    ### Notes:
    - `Add Note to file`: Adds a Note to the current file, available in the file context menu
-   - `Add Note to file in Active Task`: Adds a Note to the current file if it's in the active task, ```crtl + alt + y```
-         - Notes save the current highlighted text; clicking on a note will take you to the saved text
+   - `Add Note to file in Active Task`: Adds a Note to the current file if it's in the active task, 
+      - pc:  ```crtl + alt + y```
+      - mac: ```cmd  + opt + y``` 
+      - Notes save the current highlighted text; clicking on a note will take you to the saved text
    - `Remove Note`: Deletes a Note, `Inline` 
 
    ### Utils:
@@ -84,7 +101,9 @@ After installing the extension, you can access the Task Manager view from the Ac
 
 5. The Explorer tab will display two sections: "Active Tasks" and "Completed Tasks".
    - Right-click on a task in either section to access the context menu with options to uncomplete the task.
+
 6. Click on a task to open all files associated with it.
+
 7. Click on a file under a task to open the specific file.
 
 
@@ -105,4 +124,4 @@ After installing the extension, you can access the Task Manager view from the Ac
 
 This is a beta, please report any bug you find!
 
-### 0.2.1
+### 0.2.2

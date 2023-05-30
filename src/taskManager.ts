@@ -220,25 +220,28 @@ async updateSubtaskColors(task: Task, oldColor: string, newColor: string): Promi
 async updateTaskColor(task: Task, newColor: string): Promise<void> {
   const tasks = this.tasks;
   const taskIndex = tasks.findIndex((t) => t.id === task.id);
+
   if (taskIndex !== -1) {
     const oldColor = tasks[taskIndex].color
     tasks[taskIndex].color = newColor;
+    const files = tasks[taskIndex].files;
 
     await this.updateSubtaskColors(tasks[taskIndex], oldColor, newColor);
-
     this.updateFileColors(tasks[taskIndex], newColor, oldColor);
 
     const workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri?.fsPath;
     this.storage.set(`tasks-${workspacePath}`, tasks);
 
-    for (const file of tasks[taskIndex].files) {
-      // Do something different if a file has a subtask.
-      if (file.subtask) {
-        updateColor(this.context, task.id, file.color, file.subtask)
-      } else {
-        updateColor(this.context, task.id, newColor, "Task")
+    if (files && files.length > 0) {
+      for (const file of files) {
+        const subtask = file.subtask ? file.subtask : "Task";
+        const color = file.subtask ? file.color : newColor;
+    
+        updateColor(this.context, task.id, color, subtask);
+        setColor(this.context, task.id, file.filePath);
       }
-      setColor(this.context, task.id, file.filePath);
+    } else {
+      updateColor(this.context, task.id, newColor, "Task");
     }
     this.refresh();
   }
