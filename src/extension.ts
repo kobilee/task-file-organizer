@@ -902,10 +902,10 @@ export function activate(context: vscode.ExtensionContext) {
   storage.set("firstActivation", true);
   
   const taskManagerProvider = new TaskManagerProvider(context, storage);
-  taskManagerProvider.fixtasks()
   const activeTaskProvider = new ActiveTaskProvider(context, storage);
   const completedTaskProvider = new CompletedTaskProvider(context, storage, taskManagerProvider, activeTaskProvider);
   startAutoCloseFilesNotInTasks(taskManagerProvider.tasks);
+  let autoSetActiveTask = vscode.workspace.getConfiguration().get('taskFileOrganizer.autoSetActiveTask');
   activateAllOpenTabs();
   context.subscriptions.push(
 
@@ -919,12 +919,14 @@ export function activate(context: vscode.ExtensionContext) {
       completedTaskProvider
     ),
     vscode.window.onDidChangeActiveTextEditor(async (editor) => {
-      if (editor) {
-        const filePath = editor.document.uri.fsPath;
-        const task = taskManagerProvider.getTaskByFilePath(filePath);
+      if(autoSetActiveTask) {
+        if (editor) {
+          const filePath = editor.document.uri.fsPath;
+          const task = taskManagerProvider.getTaskByFilePath(filePath);
 
-        if (task) {
-          taskManagerProvider.setTaskAsActive(task);
+          if (task) {
+            taskManagerProvider.setTaskAsActive(task);
+          }
         }
       }
     }),
@@ -936,6 +938,9 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration('taskFileOrganizer.enableAutoClose') || e.affectsConfiguration('taskFileOrganizer.closeFilesInterval')) {
         startAutoCloseFilesNotInTasks(taskManagerProvider.tasks);
+      }
+      if (e.affectsConfiguration('taskFileOrganizer.autoSetActiveTask')) {
+        autoSetActiveTask = vscode.workspace.getConfiguration().get('taskFileOrganizer.autoSetActiveTask');
       }
     }),
     vscode.commands.registerCommand('taskManager.openNote', (file: TaskFile, noteId: string) => {

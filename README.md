@@ -45,26 +45,33 @@ After installing the extension, you can access the Task Manager view from the Ac
    - Go to on Windows/Linux `File > Preferences > Settings` or on macOS `Code > Preferences > Settings` 
       - (or `Ctrl + ,` on Windows/Linux or `Cmd + ,` on Mac).
    - Search for "Colored Task Manager" in the search bar.
-   - Configure the settings for "Close Files Interval" and "Enable Auto Close" as desired.
+   - Configure the settings for:
+      - `Open File Behavior`: This setting allows you to determine the behavior when a file is opened. You can choose to add the opened file to the active task, select a specific task to add the file to, or do nothing.
+
+      - `Enable Auto Close`: Enable this setting if you want the extension to automatically close any files that are not associated with a task. This action is performed at specified intervals to help maintain a clean and focused workspace.
+
+      - `Auto Set Active Task`: This setting enables the extension to automatically set the active task based on the most recently selected file. If you switch between files, the task associated with the current file will become the active task.
 
 3. (Optional) Use the command palette (`Ctrl+Shift+P` or `Cmd+Shift+P` on Mac) to access the extension's commands:
-   - `Create Task`: s a new task
+   - `Create Task`: creates a new task
 
 4. The Task Manger Tab in the activity bar will give you access to the reset of the commands:
    ### Tab view:
    - `Create Task`: Creates a new task, button at the top of the tab view. 
+       - pc:  ```ctrl + alt + n```
+       - mac: ```cmd  + opt + n```      
   
    ### Tasks:
    - `Rename Task`: Allows you to update the name of a Task,  `Inline`
    - `Remove Task`: Deletes a Task, `Inline`
    - `Generate Random Color`: Generates a new random color for a task, `Inline`
    - `Save Files in Task`: Saves all files in a task, `Inline`
-      - pc:  ```crtl + alt + s```
+      - pc:  ```ctrl + alt + s```
       - mac: ```cmd  + opt + s``` 
 
    ### Manipluate Task Files:
    - `Close All Files in Task`: Closes all open files in Task, available in the task context menu 
-      - pc:  ```crtl + alt + c```
+      - pc:  ```ctrl + alt + c```
       - mac: ```cmd  + opt + c``` 
    - `Close All Files not in Task`: Closes all open files in that are not in a Task, available in the task context menu
    - `Open All Files in Task`: Opens all files in Task, available in the task context menu
@@ -124,4 +131,4 @@ After installing the extension, you can access the Task Manager view from the Ac
 
 This is a beta, please report any bug you find!
 
-### 0.2.2
+### 0.2.3

@@ -46,111 +46,111 @@ function getContrastColor(hexColor: string): string {
 }
 
 export function generateCssFile(context: vscode.ExtensionContext): void {
-
   const storage = new Storage(context);
-  // set all colors
   const cssFile = path.join(modulesPath(context), "inject.css");
-  const tabs = storage.get("tabs") || {};
   const workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri?.fsPath;
   const tasks = storage.get(`tasks-${workspacePath}`) || [];
-  let style = "";
-  let activeSelectorsArr: string[] = [];
   const colorsData = storage.get("customColors");
 
-  const generateStyleForTabs = (tabs: string[], taskColorDict: any, type: string): string => {
+  let activeSelectorsArr: string[] = [];
+  let fileToActiveTask = createFileToActiveTaskMap(tasks);
 
-    let style = "";
-    const taskColorData = taskColorDict[type]
-    if (taskColorData) {
-      let backgroundSelectors = "";
-      let fontColorSelectors = "";
-      const _background = taskColorData.background;
-      const _fontColor = taskColorData.color;
-      const _opacity = taskColorData.opacity || "0.6";
-      const backgroundSelectorsArr = tabs.map(function (a: string) {
-        return `.tab[title*="${formatTabTitle(a)}" i]`;
-      });
-      activeSelectorsArr.push(
-        ...tabs.map(function (a: string) {
-          return `.tab[title*="${formatTabTitle(a)}" i].active`;
-        })
-      );
-      const fontColorSelectorsArr = tabs.map(function (a: string) {
-        return `.tab[title*="${formatTabTitle(a)}" i] a,.tab[title="${formatTabTitle(a)}" i] .monaco-icon-label:after,.tab[title*="${formatTabTitle(a)}" i] .monaco-icon-label:before`;
-      });
-      if (backgroundSelectorsArr.length > 0) {
-        backgroundSelectors = backgroundSelectorsArr.join(",") + `{background-color:${_background} !important; opacity:${_opacity};}`;
-      }
+  let style = tasks.filter((task: { isComplete: any; }) => !task.isComplete)
+                   .map((task: any) => generateTaskStyles(task, colorsData, activeSelectorsArr, fileToActiveTask))
+                   .join('');
 
-      if (fontColorSelectorsArr.length > 0) {
-        fontColorSelectors = fontColorSelectorsArr.join(",") + `{color:${_fontColor} !important;}`;
-      }
-      style += backgroundSelectors + fontColorSelectors;
-    }
+  if (activeSelectorsArr.length > 0) {
+      style += activeSelectorsArr.join(",") + `{opacity:1;}`;
+  }
 
-    if (activeSelectorsArr.length > 0) {
-      let activeSelectors = activeSelectorsArr.join(",") + `{opacity:1;}`;
-      style += activeSelectors;
-    }
-    return style;
-  };
+  ensureDirectoryExistence(cssFile);
+  writeStyleToFile(cssFile, style);
+}
 
-  for (const task of tasks) {
-    if (!task.isComplete){
-      let taskTabs = new Map();
-
-      // Create a map of subtask names to file paths
+function createFileToActiveTaskMap(tasks: any[]): Map<string, any> {
+  let fileToActiveTask = new Map();
+  for (const task of tasks.filter(t => t.isActive)) {
       for (const file of task.files) {
-        let fileSubtask = file.subtask || "Task";
-
-        if (!taskTabs.has(fileSubtask)) {
-          taskTabs.set(fileSubtask, []);
-        }
-        taskTabs.get(fileSubtask).push(file.filePath.replace(/\\/g, "\\\\"));
+          let filePath = file.filePath.replace(/\\/g, "\\\\");
+          fileToActiveTask.set(filePath, task);
       }
-
-      // Generate style for each subtask
-      for (const subtask of task.subtasks) {
-        let subtabs = taskTabs.get(subtask.name);
-        if (subtabs) {
-          let subtaskColorData = colorsData[task.id];
-          style += generateStyleForTabs(subtabs, subtaskColorData, subtask.name);
-          
-
-        }
-      }
-
-      // Generate style for files without a subtask
-      let taskFiles = taskTabs.get("Task");
-      if (taskFiles) {
-        let taskColorData = colorsData[task.id];
-        style += generateStyleForTabs(taskFiles, taskColorData, "Task");
-      }
-    }
   }
-  const dirExists = fs.existsSync(modulesPath(context));
-  if (!dirExists) {
-    const test = fs.mkdirSync(modulesPath(context), { recursive: true });
-    console.log("css", test);
-  }
-  console.log("file", cssFile);
-  if (fs.existsSync(cssFile)) {
-    fs.writeFileSync(cssFile, style);
-  } else {
-    fs.appendFile(cssFile, style, function (err) {
-      if (err) {
-        vscode.window.showInformationMessage(
-          `Could not create a css file. tabscolor won't be able to change your tabs color`
-        );
-        throw err;
+  return fileToActiveTask;
+}
+
+function generateTaskStyles(task: any, colorsData: any, activeSelectorsArr: string[], fileToActiveTask: Map<string, any>): string {
+  let taskTabs = createTaskTabsMap(task, fileToActiveTask);
+  console.log(taskTabs)
+  let style = '';
+  for (const subtaskName of Array.from(taskTabs.keys())) {
+      let tabs = taskTabs.get(subtaskName);
+      if (tabs) {
+          let taskColorData = colorsData[task.id];
+          style += generateStyleForTabs(tabs, taskColorData, subtaskName, activeSelectorsArr);
       }
-    });
   }
+  return style;
+}
+
+function createTaskTabsMap(task: any, fileToActiveTask: Map<string, any>): Map<string, string[]> {
+  let taskTabs = new Map();
+  for (const file of task.files) {
+      let fileSubtask = file.subtask || "Task";
+      if (task.isActive || !fileToActiveTask.has(file.filePath.replace(/\\/g, "\\\\"))) {
+          taskTabs.set(fileSubtask, (taskTabs.get(fileSubtask) || []).concat(file.filePath.replace(/\\/g, "\\\\")));
+      }
+  }
+  return taskTabs;
 }
 
 
+function generateStyleForTabs(tabs: string[], taskColorDict: any, type: string, activeSelectorsArr: string[]): string {
+  let style = "";
+  const taskColorData = taskColorDict[type]
+  if (taskColorData) {
+      const _background = taskColorData.background;
+      const _fontColor = taskColorData.color;
+      const _opacity = taskColorData.opacity || "0.6";
 
+      let backgroundSelectorsArr = tabs.map(a => `.tab[title*="${formatTabTitle(a)}" i]`);
+      let fontColorSelectorsArr = tabs.map(a => `.tab[title*="${formatTabTitle(a)}" i] a,.tab[title="${formatTabTitle(a)}" i] .monaco-icon-label:after,.tab[title*="${formatTabTitle(a)}" i] .monaco-icon-label:before`);
 
+      if (backgroundSelectorsArr.length > 0) {
+          style += backgroundSelectorsArr.join(",") + `{background-color:${_background} !important; opacity:${_opacity};}`;
+      }
+
+      if (fontColorSelectorsArr.length > 0) {
+          style += fontColorSelectorsArr.join(",") + `{color:${_fontColor} !important;}`;
+      }
+
+      activeSelectorsArr.push(
+          ...tabs.map(a => `.tab[title*="${formatTabTitle(a)}" i].active`)
+      );
+  }
+
+  return style;
+}
+
+function ensureDirectoryExistence(filePath: string) {
+  const dirname = path.dirname(filePath);
+  if (fs.existsSync(dirname)) {
+    return;
+  }
+  fs.mkdirSync(dirname, { recursive: true });
+}
+
+function writeStyleToFile(cssFile: string, style: string) {
+  if (fs.existsSync(cssFile)) {
+      fs.writeFileSync(cssFile, style);
+  } else {
+      fs.appendFile(cssFile, style, function (err) {
+          if (err) {
+              vscode.window.showInformationMessage(`Could not create a css file. tabscolor won't be able to change your tabs color`);
+              throw err;
+          }
+      });
+  }
+}
 
 export function reloadCss(): void {
   vscode.window.showInformationMessage("---tab updated---");

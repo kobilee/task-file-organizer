@@ -3,7 +3,7 @@
   "name": "file-organizer",
   "displayName": "Colored Task Manager",
   "description": "",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "icon": "assests/icon.png",
   "repository": {
     "type": "git",
@@ -472,11 +472,17 @@
         "key": "ctrl+alt+c",
         "mac": "cmd+opt+c",
         "when": "editorTextFocus"
+      },
+      {
+        "command": "taskManager.createTask",
+        "key": "ctrl+alt+n",
+        "mac": "cmd+opt+n",
+        "when": "editorTextFocus"
       }
     ],
     "configuration": {
       "type": "object",
-      "title": "Colored Task       Manager Configuration",
+      "title": "Colored Task Manager Configuration",
       "properties": {
         "taskFileOrganizer.closeFilesInterval": {
           "type": "integer",
@@ -498,6 +504,11 @@
           ],
           "default": "doNothing",
           "description": "Specify the behavior when opening a new file: add to active task, prompt for a task, or do nothing."
+        },
+        "taskFileOrganizer.autoSetActiveTask": {
+              "type": "boolean",
+              "default": false,
+              "description": "Automatically set task as active when the selecting on opening a file from that task"
         }
       }
     }

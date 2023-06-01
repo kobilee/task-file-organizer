@@ -186,13 +186,6 @@ export class TaskManagerProvider
     );
   }
 
-  public fixtasks() {
-    for (const task of this.tasks) {
-      if (task.subtasks === undefined) {
-        task.subtasks = [];
-      }
-    }
-  }
 
 // Updates the color of each subtask.
 async updateSubtaskColors(task: Task, oldColor: string, newColor: string): Promise<void> {
