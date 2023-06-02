@@ -2,7 +2,9 @@
 
 This Visual Studio Code extension provides a simple task manager, allowing you to manage tasks and associate files with each task. Tasks can be created, deleted, and marked as complete. The extension also allows you to set a random color for each task, which will be applied to associated files' tabs in the editor.
 
-> **IMPORTANT NOTE : AFTER INSTALLING TABSCOLOR YOU MAY GET THE POPUP "YOUR CODE INSTALLATION IS CORRUPT..." UPON RESTART. JUST CLICK ON THE GEAR ICON AND CHOOSE DON'T SHOW AGAIN.**
+> **IMPORTANT NOTE : AFTER INSTALLING COLORED TASK MANGER YOU MAY GET THE POPUP "YOUR CODE INSTALLATION IS CORRUPT..." UPON RESTART. JUST CLICK ON THE GEAR ICON AND CHOOSE DON'T SHOW AGAIN.**
+
+This Extension is not compatible with: [Tabscolor](https://marketplace.visualstudio.com/items?itemName=mondersky.tabscolor)
 
 ## How it looks
 
@@ -132,4 +134,4 @@ After installing the extension, you can access the Task Manager view from the Ac
 
 This is a beta, please report any bug you find!
 
-### 0.2.6
+### 0.2.7

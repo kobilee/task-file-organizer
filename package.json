@@ -3,7 +3,7 @@
   "name": "file-organizer",
   "displayName": "Colored Task Manager",
   "description": "Manage, track, and color-code your files within a streamlined and intuitive task manager interface to elevate your coding workflow.",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "icon": "assests/icon.png",
   "repository": {
     "type": "git",
