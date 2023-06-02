@@ -2,6 +2,8 @@
 
 This Visual Studio Code extension provides a simple task manager, allowing you to manage tasks and associate files with each task. Tasks can be created, deleted, and marked as complete. The extension also allows you to set a random color for each task, which will be applied to associated files' tabs in the editor.
 
+> **IMPORTANT NOTE : AFTER INSTALLING TABSCOLOR YOU MAY GET THE POPUP "YOUR CODE INSTALLATION IS CORRUPT..." UPON RESTART. JUST CLICK ON THE GEAR ICON AND CHOOSE DON'T SHOW AGAIN.**
+
 ## How it looks
 
 ![Preview GIF](https://github.com/kobilee/task-file-organizer/raw/main/assests/preview.gif)
@@ -41,42 +43,23 @@ After installing the extension, you can access the Task Manager view from the Ac
 
 1. Close and Open VSCode after installation.
 
-2. (Optional) Configure extension settings:
-   - Go to on Windows/Linux `File > Preferences > Settings` or on macOS `Code > Preferences > Settings` 
-      - (or `Ctrl + ,` on Windows/Linux or `Cmd + ,` on Mac).
-   - Search for "Colored Task Manager" in the search bar.
-   - Configure the settings for:
-      - `Open File Behavior`: This setting allows you to determine the behavior when a file is opened. You can choose to add the opened file to the active task, select a specific task to add the file to, or do nothing.
-
-      - `Enable Auto Close`: Enable this setting if you want the extension to automatically close any files that are not associated with a task. This action is performed at specified intervals to help maintain a clean and focused workspace.
-
-      - `Auto Set Active Task`: This setting enables the extension to automatically set the active task based on the most recently selected file. If you switch between files, the task associated with the current file will become the active task.
-
-3. (Optional) Use the command palette (`Ctrl+Shift+P` or `Cmd+Shift+P` on Mac) to access the extension's commands:
+2. (Optional) Use the command palette (`Ctrl+Shift+P` or `Cmd+Shift+P` on Mac) to access the extension's commands:
    - `Create Task`: creates a new task
 
-4. The Task Manger Tab in the activity bar will give you access to the reset of the commands:
+3. The Task Manger Tab in the activity bar will give you access to the reset of the commands:
    ### Tab view:
-   - `Create Task`: Creates a new task, button at the top of the tab view. 
-       - pc:  ```ctrl + alt + n```
-       - mac: ```cmd  + opt + n```      
+   - `Create Task`: Creates a new task, button at the top of the tab view.      
   
    ### Tasks:
    - `Rename Task`: Allows you to update the name of a Task,  `Inline`
    - `Remove Task`: Deletes a Task, `Inline`
    - `Generate Random Color`: Generates a new random color for a task, `Inline`
    - `Save Files in Task`: Saves all files in a task, `Inline`
-      - pc:  ```ctrl + alt + s```
-      - mac: ```cmd  + opt + s``` 
 
    ### Manipluate Task Files:
    - `Close All Files in Task`: Closes all open files in Task, available in the task context menu 
-      - pc:  ```ctrl + alt + c```
-      - mac: ```cmd  + opt + c``` 
    - `Close All Files not in Task`: Closes all open files in that are not in a Task, available in the task context menu
    - `Open All Files in Task`: Opens all files in Task, available in the task context menu
-      - pc:  ```crtl + alt + a```
-      - mac: ```cmd  + opt + a``` 
    - `Sort All Files in Task`: Sorts all open files in Task so they display next to one another, available in the task context menu
    - `Remove File from task`: Deletes a file from a task, `Inline`
    
@@ -89,15 +72,11 @@ After installing the extension, you can access the Task Manager view from the Ac
    ### Add Files:
    - `Add File to Task`: Adds a file to a Task, available in the task context menu
    - `Add File to Active Task`: Adds a file to the active Task (Active task is indicated by the larger icon)
-      - pc:  ```crtl + alt + t```
-      - mac: ```cmd  + opt + t``` 
    - `Remove File from task`: Deletes a file from a task, available `Inline` 
 
    ### Notes:
    - `Add Note to file`: Adds a Note to the current file, available in the file context menu
    - `Add Note to file in Active Task`: Adds a Note to the current file if it's in the active task, 
-      - pc:  ```crtl + alt + y```
-      - mac: ```cmd  + opt + y``` 
       - Notes save the current highlighted text; clicking on a note will take you to the saved text
    - `Remove Note`: Deletes a Note, `Inline` 
 
@@ -106,13 +85,35 @@ After installing the extension, you can access the Task Manager view from the Ac
    - `Complete Task`: Marks a task as complete; complete tasks are not visible in the task manager tab and can be seen in the "Completed Tasks" explained below, available in the task context menu
    - `Add and commit Files in Task`: Allows you to add and commit any changes to files within
 
-5. The Explorer tab will display two sections: "Active Tasks" and "Completed Tasks".
+4. The Explorer tab will display two sections: "Active Tasks" and "Completed Tasks".
    - Right-click on a task in either section to access the context menu with options to uncomplete the task.
 
-6. Click on a task to open all files associated with it.
+5. Click on a task to open all files associated with it.
 
-7. Click on a file under a task to open the specific file.
+6. Click on a file under a task to open the specific file.
 
+## Keyboard Shortcuts
+
+| Key                                                                                               | Command                                  |
+| ------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>t</kbd> / <kbd>Cmd</kbd> + <kbd>Opt</kbd> + <kbd>t</kbd>  | Add File to `Active Task`                |
+| <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>y</kbd> / <kbd>Cmd</kbd> + <kbd>Opt</kbd> + <kbd>y</kbd>  | Add Note to open file in `Active Task`   |
+| <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>a</kbd> / <kbd>Cmd</kbd> + <kbd>Opt</kbd> + <kbd>a</kbd>  | Open All Files in Task in `Active Task`  |
+| <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>c</kbd> / <kbd>Cmd</kbd> + <kbd>Opt</kbd> + <kbd>c</kbd>  | Close All Files in Task in `Active Task` |
+| <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>s</kbd> / <kbd>Cmd</kbd> + <kbd>Opt</kbd> + <kbd>s</kbd>  | Save Files in `Active Task`              |
+| <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>n</kbd> / <kbd>Cmd</kbd> + <kbd>Opt</kbd> + <kbd>n</kbd>  | Create a new Task             |
+
+## Extension Settings
+   - Go to on Windows/Linux `File > Preferences > Settings` or on macOS `Code > Preferences > Settings` 
+      - (or `Ctrl + ,` on Windows/Linux or `Cmd + ,` on Mac).
+   - Search for "Colored Task Manager" in the search bar:
+
+| Name                                    | Default     | Values                                    | Description                                                                                                                 |
+| --------------------------------------- | ----------- | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `taskFileOrganizer.openFileBehavior`    | `doNothing` | `doNothing/promptForTask/addToActiveTask` | Determine the behavior when a file is opened. You can choose to add the opened file to the active task, select a specific task to add the file to, or do nothing.  |
+| `taskFileOrganizer.enableAutoClose`     | `false`     | `true/false`                              | Automatically close any files that are not associated with a task. This action is performed at specified intervals to help maintain a clean and focused workspace. |
+| `taskFileOrganizer.closeFilesInterval` | `600000`       | `Any Int above 1000`                              | Interval (in milliseconds) to automatically close files not in tasks. Minimum: 1000 (1 second).  |
+| `taskFileOrganizer.autoSetActiveTask` | `false`       | `true/false`                              | Automatically set the active task based on the most recently selected file. If you switch between files, the task associated with the current file will become the active task.  |
 
 ## Known Issues
 
@@ -131,4 +132,4 @@ After installing the extension, you can access the Task Manager view from the Ac
 
 This is a beta, please report any bug you find!
 
-### 0.2.3
+### 0.2.5
