@@ -132,4 +132,4 @@ After installing the extension, you can access the Task Manager view from the Ac
 
 This is a beta, please report any bug you find!
 
-### 0.2.5
+### 0.2.6

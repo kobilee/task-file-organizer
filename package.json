@@ -2,8 +2,8 @@
   "publisher": "JakobiLee",
   "name": "file-organizer",
   "displayName": "Colored Task Manager",
-  "description": "",
-  "version": "0.2.5",
+  "description": "Manage, track, and color-code your files within a streamlined and intuitive task manager interface to elevate your coding workflow.",
+  "version": "0.2.6",
   "icon": "assests/icon.png",
   "repository": {
     "type": "git",
